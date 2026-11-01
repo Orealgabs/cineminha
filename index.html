@@ -34,7 +34,7 @@ label.h,.h{font-size:11px;text-transform:uppercase;letter-spacing:.09em;color:va
 .opt{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);border-radius:10px;cursor:pointer}
 .opt:has(input:checked){border-color:var(--accent);background:rgba(232,176,75,.07)}
 .opt input{accent-color:var(--accent);margin-top:3px}
-.opt b{font-weight:600;display:block}
+.opt > span > b{font-weight:600;display:block}
 .opt small{color:var(--muted);font-size:12.5px;line-height:1.4;display:block}
 .rec{color:var(--accent);font-size:11px;font-weight:600;margin-left:6px}
 select,input[type=text]{width:100%;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:10px;font:inherit}
@@ -77,6 +77,7 @@ details{font-size:13.5px;color:var(--muted)} details summary{cursor:pointer;colo
 details ol{padding-left:18px;margin:8px 0 0}
 @media (prefers-reduced-motion:no-preference){.btn,.opt{transition:background .15s,border-color .15s}}
 .linkrow{display:flex;gap:8px}.linkrow input{flex:1;min-width:0;font-family:var(--mono);font-size:13px}.linkrow button{flex:none;background:var(--accent);color:var(--accent-ink);border:0;border-radius:8px;padding:0 14px;font:600 13px var(--body);cursor:pointer}
+.linkrow select{flex:1;min-width:0}
 .hint{font-size:12.5px;color:var(--muted);margin-top:6px}
 </style>
 </head>
@@ -101,15 +102,47 @@ details ol{padding-left:18px;margin:8px 0 0}
           <label class="opt"><input type="radio" name="audio" value="tab" checked>
             <span><b>Só o som da aba <span class="rec">RECOMENDADO</span></b>
             <small>Ao compartilhar, escolha <b>Guia do Chrome</b> e deixe ligado "Compartilhar áudio da guia". Discord fica de fora.</small></span></label>
+          <label class="opt"><input type="radio" name="audio" value="app">
+            <span><b>Som de um programa <span class="rec">PARA JOGOS</span></b>
+            <small>Envia só o som do jogo que você escolher, com o app do Discord normal. Precisa do Ajudante de Som aberto.</small></span></label>
+          <label class="opt"><input type="radio" name="audio" value="game">
+            <span><b>Som do PC sem o navegador</b>
+            <small>Tira tudo o que toca no navegador. Com o Discord pelo navegador, ele fica de fora. Sem precisar do ajudante.</small></span></label>
           <label class="opt"><input type="radio" name="audio" value="device">
             <span><b>Um dispositivo de áudio</b>
-            <small>Ex.: "CABLE Output" (VB-Cable) ou "Mixagem estéreo". Para programas fora do navegador.</small></span></label>
+            <small>Ex.: "CABLE Output" (VB-Cable) ou "Mixagem estéreo".</small></span></label>
           <label class="opt"><input type="radio" name="audio" value="system">
             <span><b>Todo o som do PC</b>
             <small>Pega tudo, inclusive o Discord. Use só se o Discord estiver fechado ou em outro fone.</small></span></label>
           <label class="opt"><input type="radio" name="audio" value="none">
             <span><b>Sem áudio</b></span></label>
         </div>
+      </div>
+
+      <div id="appBox" hidden>
+        <div class="status" style="margin-bottom:10px"><span class="dot" id="appDot"></span><span id="appStatus">Procurando o Ajudante de Som…</span></div>
+        <div id="appMissing" class="note" hidden>
+          Abra o <b>AjudanteDeSom.exe</b> e deixe a janela dele aberta. Esta página se conecta sozinha.
+          <div style="margin-top:6px">Na primeira vez, o Windows pode mostrar "O Windows protegeu o computador": clique em <b>Mais informações → Executar assim mesmo</b>. O navegador também vai pedir permissão para acessar a rede local ou os aplicativos do seu PC: clique em <b>Permitir</b>. Se clicou em Bloquear sem querer, clique no ícone ao lado do endereço do site e libere essa permissão.</div>
+        </div>
+        <div id="appPick" hidden>
+          <label class="h" for="appSel">Programa</label>
+          <div class="linkrow">
+            <select id="appSel"></select>
+            <button id="appRefresh" type="button">Atualizar</button>
+          </div>
+          <div class="hint">Abra o jogo antes e escolha a janela dele aqui. Depois, clique em começar e compartilhe a janela do jogo.</div>
+        </div>
+      </div>
+
+      <div id="gameBox" class="note" hidden>
+        <b>Como deixar o Discord de fora:</b>
+        <ol style="margin:6px 0 0;padding-left:18px">
+          <li>Feche o app do Discord (inclusive na bandeja, perto do relógio).</li>
+          <li>Abra o Discord em <b>discord.com/app</b> numa aba deste mesmo navegador e entre na call por lá.</li>
+          <li>Clique em começar, escolha a <b>janela do jogo</b> ou a <b>tela inteira</b> e ligue <b>"Compartilhar áudio do sistema"</b>.</li>
+        </ol>
+        <div id="gameCompat" style="margin-top:8px"></div>
       </div>
 
       <div id="deviceBox" hidden>
@@ -335,15 +368,188 @@ details ol{padding-left:18px;margin:8px 0 0}
   const viewers = new Map(); // id do amigo -> { call, conn }
 
   const audioMode = () => document.querySelector('input[name=audio]:checked').value;
+  function syncAudioBoxes(){
+    $("deviceBox").hidden = audioMode() !== "device";
+    $("gameBox").hidden = audioMode() !== "game";
+    $("appBox").hidden = audioMode() !== "app";
+    if (audioMode() === "game") checkGameSupport();
+    if (audioMode() === "app") helperConnect();
+  }
+
+  // ================= AJUDANTE DE SOM (programa no PC) =================
+  // O AjudanteDeSom.exe captura só o som de um programa e manda para cá, em PCM 16 bits, 48 kHz, estéreo.
+  const HELPER_URL = "ws://127.0.0.1:47800";
+  const helper = { ws: null, ready: false, retry: null, waiting: null, onPcm: null };
+
+  function setAppStatus(text, level){
+    $("appStatus").textContent = text;
+    $("appDot").className = "dot" + (level ? " " + level : "");
+  }
+
+  function helperConnect(){
+    if (helper.ws && helper.ws.readyState <= 1) return;
+    clearTimeout(helper.retry);
+    let ws;
+    try { ws = new WebSocket(HELPER_URL); } catch(e) { return helperLost(); }
+    ws.binaryType = "arraybuffer";
+    helper.ws = ws;
+    ws.onmessage = e => {
+      if (typeof e.data !== "string") { if (helper.onPcm) helper.onPcm(e.data); return; }
+      let m; try { m = JSON.parse(e.data); } catch(err) { return; }
+      if (m.type === "hello") {
+        helper.ready = true;
+        setAppStatus("Ajudante de Som conectado.", "ok");
+        $("appMissing").hidden = true; $("appPick").hidden = false;
+        helperSend({ type: "list" });
+      } else if (m.type === "list") {
+        fillApps(m.apps || []);
+      } else if (m.type === "started" || m.type === "error") {
+        if (helper.waiting) { const w = helper.waiting; helper.waiting = null; w(m); }
+        else if (m.type === "error" && stream) setStatus("host", "Ajudante: " + m.message, "warn");
+      } else if (m.type === "ended") {
+        if (stream) setStatus("host", "O programa foi fechado, então o som parou. A imagem continua.", "warn");
+      }
+    };
+    ws.onclose = () => { if (helper.ws === ws) helperLost(); };
+  }
+
+  function helperLost(){
+    const was = helper.ready;
+    helper.ready = false; helper.ws = null;
+    if (helper.waiting) { const w = helper.waiting; helper.waiting = null; w({ type: "error", message: "O Ajudante de Som foi fechado." }); }
+    setAppStatus(was ? "O Ajudante de Som foi fechado." : "Ajudante de Som não encontrado.", "bad");
+    $("appMissing").hidden = false; $("appPick").hidden = true;
+    if (was && stream && audioMode() === "app") setStatus("host", "O Ajudante de Som foi fechado, então o som parou. Abra de novo e reinicie a transmissão.", "warn");
+    // tenta de novo enquanto a opção estiver escolhida
+    if (audioMode() === "app") helper.retry = setTimeout(helperConnect, 3000);
+  }
+
+  function helperSend(obj){
+    if (helper.ws && helper.ws.readyState === 1) helper.ws.send(JSON.stringify(obj));
+  }
+
+  function fillApps(apps){
+    const sel = $("appSel"), prevPid = sel.value, prevName = store.get("appName", "");
+    sel.innerHTML = "";
+    if (!apps.length) {
+      sel.innerHTML = '<option value="">Nenhum programa com janela aberta</option>';
+      return;
+    }
+    apps.forEach(a => {
+      const o = document.createElement("option");
+      o.value = a.pid; o.dataset.name = a.name;
+      const title = a.title.length > 60 ? a.title.slice(0, 57) + "…" : a.title;
+      o.textContent = `${title} (${a.name})`;
+      sel.appendChild(o);
+    });
+    const byPid = [...sel.options].find(o => o.value === prevPid);
+    const byName = [...sel.options].find(o => o.dataset.name === prevName);
+    if (byPid) sel.value = prevPid; else if (byName) sel.value = byName.value;
+  }
+  $("appRefresh").onclick = () => { helperConnect(); helperSend({ type: "list" }); };
+  $("appSel").onchange = () => {
+    const o = $("appSel").selectedOptions[0];
+    if (o && o.dataset.name) store.set("appName", o.dataset.name);
+  };
+
+  // Toca o PCM recebido numa faixa de áudio que vai para os amigos.
+  const PLAYER_CODE = `
+    class PcmPlayer extends AudioWorkletProcessor {
+      constructor(){
+        super();
+        this.cap = 48000 * 2;             // 2 s de frames
+        this.buf = new Float32Array(this.cap * 2);
+        this.r = 0; this.w = 0; this.n = 0; this.playing = false;
+        this.target = 2880;               // 60 ms de reserva
+        this.max = 12000;                 // acima de 250 ms, descarta o atraso
+        this.port.onmessage = e => {
+          const d = new Int16Array(e.data), len = this.buf.length;
+          for (let i = 0; i < d.length; i++) { this.buf[this.w] = d[i] / 32768; this.w = (this.w + 1) % len; }
+          this.n += d.length >> 1;
+          if (this.n > this.cap) this.n = this.cap;
+          if (this.n > this.max) { this.r = (this.w - this.target * 2 + len) % len; this.n = this.target; }
+        };
+      }
+      process(inputs, outputs){
+        const L = outputs[0][0], R = outputs[0][1] || L, len = this.buf.length;
+        if (!this.playing && this.n >= this.target) this.playing = true;
+        for (let f = 0; f < L.length; f++) {
+          if (this.playing && this.n > 0) {
+            L[f] = this.buf[this.r]; R[f] = this.buf[this.r + 1];
+            this.r = (this.r + 2) % len; this.n--;
+          } else { L[f] = 0; R[f] = 0; }
+        }
+        if (this.n === 0) this.playing = false;   // esvaziou: junta reserva de novo
+        return true;
+      }
+    }
+    registerProcessor("pcm-player", PcmPlayer);`;
+
+  let appAudio = null; // { ctx, node, track }
+  async function startAppAudio(ctx, pid){
+    let node;
+    const url = URL.createObjectURL(new Blob([PLAYER_CODE], { type: "application/javascript" }));
+    try {
+      await ctx.audioWorklet.addModule(url);
+      node = new AudioWorkletNode(ctx, "pcm-player", { numberOfInputs: 0, outputChannelCount: [2] });
+      helper.onPcm = ab => node.port.postMessage(ab, [ab]);
+    } finally { URL.revokeObjectURL(url); }
+    const dest = ctx.createMediaStreamDestination();
+    dest.channelCount = 2;
+    node.connect(dest);
+    if (ctx.state !== "running") await ctx.resume().catch(() => {});
+    const track = dest.stream.getAudioTracks()[0];
+    track.contentHint = "music";
+    appAudio = { ctx, node, track };
+
+    const reply = await new Promise(res => {
+      helper.waiting = res;
+      helperSend({ type: "start", pid: Number(pid) });
+      setTimeout(() => { if (helper.waiting === res) { helper.waiting = null; res({ type: "error", message: "O Ajudante de Som não respondeu." }); } }, 10000);
+    });
+    return { track, error: reply.type === "error" ? reply.message : "" };
+  }
+  function stopAppAudio(){
+    helper.onPcm = null;
+    helperSend({ type: "stop" });
+    if (appAudio) {
+      try { appAudio.track.stop(); } catch(e){}
+      try { appAudio.ctx.close(); } catch(e){}
+      appAudio = null;
+    }
+  }
+  // confere se dá para tirar o som do navegador: precisa de Chrome/Edge recente e Windows 11
+  let gameChecked = false;
+  async function checkGameSupport(){
+    if (gameChecked) return; gameChecked = true;
+    const el = $("gameCompat");
+    let browserOk = false;
+    try { browserOk = !!navigator.mediaDevices.getSupportedConstraints().restrictOwnAudio; } catch(e){}
+    let win = null;
+    try {
+      const ua = navigator.userAgentData;
+      if (ua && ua.platform === "Windows") {
+        const v = await ua.getHighEntropyValues(["platformVersion"]);
+        win = parseInt(v.platformVersion, 10) >= 13 ? 11 : 10;
+      }
+    } catch(e){}
+    if (!browserOk) {
+      el.innerHTML = '<span style="color:var(--bad)">Este navegador não tem esse recurso. Atualize o Chrome ou o Edge (menu ⋮ → Ajuda → Sobre).</span>';
+    } else if (win === 10) {
+      el.innerHTML = '<span style="color:var(--bad)">Seu Windows é o 10. Esse recurso só existe no Windows 11, então o Discord iria junto.</span>';
+    } else {
+      el.innerHTML = '<span style="color:var(--ok)">Seu navegador tem suporte.</span> Para testar, pause o jogo e peça para alguém falar no Discord: a barra de Áudio, embaixo do vídeo, não deve mexer.';
+    }
+  }
   // restaurar configurações
   (() => {
     const a = store.get("audio", "tab"); const r = document.querySelector(`input[name=audio][value="${a}"]`); if (r) r.checked = true;
     const q = store.get("quality", "1080-30"); if ([...$("quality").options].some(o => o.value === q)) $("quality").value = q;
     $("bitrate").value = store.get("bitrate", "5000"); $("bitrateVal").textContent = $("bitrate").value + " kbps";
-    $("deviceBox").hidden = audioMode() !== "device";
+    syncAudioBoxes();
   })();
   document.querySelectorAll('input[name=audio]').forEach(r => r.onchange = () => {
-    $("deviceBox").hidden = audioMode() !== "device"; store.set("audio", audioMode());
+    syncAudioBoxes(); store.set("audio", audioMode());
   });
   $("codec").onchange = () => store.set("codec", $("codec").value);
   $("bitrate").oninput = () => {
@@ -395,16 +601,19 @@ details ol{padding-left:18px;margin:8px 0 0}
     });
   }
 
-  async function captureStream(){
+  async function captureStream(appCtx){
     const [h, fps] = $("quality").value.split("-").map(Number);
     const mode = audioMode();
-    const wantDisplayAudio = mode === "tab" || mode === "system";
+    const wantDisplayAudio = mode === "tab" || mode === "system" || mode === "game";
     const cleanAudio = { echoCancellation:false, noiseSuppression:false, autoGainControl:false, channelCount:2, sampleRate:48000 };
+    const audioC = { ...cleanAudio, suppressLocalAudioPlayback:false };
+    // "game": som do PC menos tudo o que toca no navegador (Discord pelo navegador fica de fora)
+    if (mode === "game") audioC.restrictOwnAudio = true;
     const display = await navigator.mediaDevices.getDisplayMedia({
       video: { height: { ideal: h }, frameRate: { ideal: fps, max: fps } },
-      audio: wantDisplayAudio ? { ...cleanAudio, suppressLocalAudioPlayback:false } : false,
+      audio: wantDisplayAudio ? audioC : false,
       preferCurrentTab: false, selfBrowserSurface: "exclude", surfaceSwitching: "include",
-      systemAudio: mode === "system" ? "include" : "exclude",
+      systemAudio: mode === "system" || mode === "game" ? "include" : "exclude",
       monitorTypeSurfaces: mode === "tab" ? "exclude" : "include"
     });
     const vt = display.getVideoTracks()[0];
@@ -413,10 +622,26 @@ details ol{padding-left:18px;margin:8px 0 0}
     let audioWarn = "";
     if (wantDisplayAudio) {
       const at = display.getAudioTracks()[0];
-      if (at) { at.contentHint = "music"; out.addTrack(at); }
+      if (at) {
+        at.contentHint = "music"; out.addTrack(at);
+        if (mode === "game") {
+          let ok = false;
+          try { ok = at.getSettings().restrictOwnAudio === true; } catch(e){}
+          if (!ok) audioWarn = "Atenção: este navegador ou Windows não conseguiu tirar o som do navegador, então o Discord pode ir junto. Precisa de Windows 11 e Chrome/Edge atualizado.";
+        }
+      }
       else audioWarn = mode === "tab"
         ? "Sem som: compartilhe uma Guia do Chrome e deixe ligado \"Compartilhar áudio da guia\"."
         : "Sem som: ligue \"Compartilhar áudio do sistema\" na janela de compartilhamento.";
+    } else if (mode === "app") {
+      try {
+        const { track, error } = await startAppAudio(appCtx, $("appSel").value);
+        out.addTrack(track);
+        if (error) audioWarn = "Sem som do programa: " + error;
+      } catch (e) {
+        display.getTracks().forEach(t => t.stop());
+        throw e;
+      }
     } else if (mode === "device") {
       const id = $("deviceSel").value;
       const mic = await navigator.mediaDevices.getUserMedia({ audio: { ...cleanAudio, deviceId: id ? { exact: id } : undefined } });
@@ -523,10 +748,17 @@ details ol{padding-left:18px;margin:8px 0 0}
   $("startBtn").onclick = async () => {
     if (!window.Peer) { setStatus("host", "Não carregou a biblioteca de conexão. Verifique a internet e recarregue.", "bad"); return; }
     if (!navigator.mediaDevices?.getDisplayMedia) { setStatus("host", "Abra a página no Chrome ou Edge no computador.", "bad"); return; }
+    let appCtx = null;
+    if (audioMode() === "app") {
+      if (!helper.ready) { setStatus("host", "Abra o AjudanteDeSom.exe antes de começar.", "bad"); helperConnect(); return; }
+      if (!$("appSel").value) { setStatus("host", "Escolha o programa na lista (abra o jogo e clique em Atualizar).", "bad"); return; }
+      // criado no clique para o navegador liberar o som
+      try { appCtx = new AudioContext({ sampleRate: 48000, latencyHint: "interactive" }); } catch(e) { appCtx = new AudioContext(); }
+    }
     $("startBtn").disabled = true;
     unlockAudio();
     try {
-      const { out, audioWarn } = await captureStream();
+      const { out, audioWarn } = await captureStream(appCtx);
       stream = out;
       video.srcObject = stream; video.muted = true; $("empty").hidden = true;
       startMeter(stream, true);
@@ -535,8 +767,10 @@ details ol{padding-left:18px;margin:8px 0 0}
       setStatus("host", audioWarn || "Abrindo a sala…", audioWarn ? "warn" : "");
       openHostPeer();
       $("startBtn").hidden = true; $("stopBtn").hidden = false; $("codec").disabled = true;
+      document.querySelectorAll('input[name=audio]').forEach(r => r.disabled = true); $("appSel").disabled = true;
     } catch (e) {
       stream = null;
+      stopAppAudio(); if (appCtx) appCtx.close().catch(()=>{});
       setStatus("host", e.name === "NotAllowedError" ? "Compartilhamento cancelado." : "Não consegui capturar: " + e.message, "bad");
     }
     $("startBtn").disabled = false;
@@ -551,8 +785,10 @@ details ol{padding-left:18px;margin:8px 0 0}
     }, 300);
     if (stream) stream.getTracks().forEach(t => t.stop());
     stream = null;
+    stopAppAudio();
     video.srcObject = null; $("empty").hidden = false; stopStats(); stopMeter();
     $("codeBox").hidden = true; $("startBtn").hidden = false; $("stopBtn").hidden = true; $("codec").disabled = false;
+    document.querySelectorAll('input[name=audio]').forEach(r => r.disabled = false); $("appSel").disabled = false;
     $("hostStatus").dataset.warn = "";
     setStatus("host", "Transmissão encerrada.", "");
   }
