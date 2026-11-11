@@ -1,0 +1,80 @@
+{
+  "name": "sessao-de-serie",
+  "productName": "Sessão de Série",
+  "version": "2.1.0",
+  "description": "Transmita tela e som para os amigos",
+  "main": "main.js",
+  "author": "Sessão de Série",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@electron/packager": "20.3.0",
+    "electron": "44.9.3",
+    "electron-builder": "26.17.0",
+    "resedit": "3.0.2"
+  },
+  "build": {
+    "appId": "io.github.sessaodeserie",
+    "productName": "Sessao de Serie",
+    "directories": {
+      "output": "dist-builder"
+    },
+    "files": [
+      "build/icon.ico",
+      "main.js",
+      "page/**",
+      "picker-preload.js",
+      "picker.html",
+      "preload.js",
+      "setup.html"
+    ],
+    "extraResources": [
+      {
+        "from": "AjudanteDeSom.exe",
+        "to": "AjudanteDeSom.exe"
+      }
+    ],
+    "electronLanguages": [
+      "pt-BR",
+      "en-US"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico",
+      "signAndEditExecutable": false
+    },
+    "compression": "maximum",
+    "afterPack": "./build/afterPack.mjs",
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowElevation": false,
+      "createDesktopShortcut": "always",
+      "createStartMenuShortcut": true,
+      "shortcutName": "Sessão de Série",
+      "uninstallDisplayName": "Sessão de Série",
+      "artifactName": "SessaoDeSerie-Instalador.exe",
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "deleteAppDataOnUninstall": false,
+      "runAfterFinish": true
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "Orealgabs",
+        "repo": "cineminha",
+        "releaseType": "release"
+      }
+    ]
+  },
+  "dependencies": {
+    "electron-updater": "6.8.11"
+  }
+}

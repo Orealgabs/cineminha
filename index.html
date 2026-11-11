@@ -5,133 +5,362 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Sessão de Série</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
 <style>
-/* Layout: uma "sala de projeção" escura — painel de controle à esquerda, tela grande à direita */
+/* Layout: "sala de casa à noite". A tela inicial pergunta só uma coisa (começar ou entrar).
+   Na sessão, o vídeo é o palco e a lateral mostra quem está junto: conversa, pessoas e o código da sala.
+   Visual escuro de propósito, com a luz quente de um abajur como cor principal. */
 :root{
-  --bg:#12100f; --panel:#1c1917; --line:#2e2925; --fg:#efe9e2; --muted:#a39a90;
-  --accent:#e8b04b; --accent-ink:#1b1408; --ok:#6fcf8e; --warn:#f0a35a; --bad:#ef6b6b;
-  --display:"Fraunces",Georgia,serif; --body:"Figtree",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,monospace;
+  --bg:#121014; --bg-2:#18151b;
+  --surface:#1d1a21; --surface-2:#26222b; --surface-3:#2f2a35;
+  --line:rgba(255,236,224,.08); --line-2:rgba(255,236,224,.15);
+  --fg:#f5f0ea; --muted:#aba2ac; --faint:#746b77;
+  --accent:#ff9b74;        /* luz de abajur */
+  --accent-2:#ffc580;
+  --accent-ink:#2b1209;
+  --live:#ff5469; --ok:#6fd6a8; --warn:#ffc861; --bad:#ff6b6b;
+  --serif:"Instrument Serif",Georgia,"Times New Roman",serif;
+  --sans:"Hanken Grotesk","Segoe UI",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  --r-lg:22px; --r-md:14px; --r-sm:10px;
   color-scheme:dark;
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-.stack{display:flex;flex-direction:column;gap:18px}
-html,body{height:100%;margin:0}
-body{background:var(--bg);color:var(--fg);font:15px/1.5 var(--body);padding:24px max(16px,env(safe-area-inset-right,0px)) 24px max(16px,env(safe-area-inset-left,0px))}
-.wrap{max-width:1280px;margin:0 auto;display:grid;grid-template-columns:360px 1fr;gap:24px}
-@media (max-width:900px){.wrap{grid-template-columns:1fr}}
-header{grid-column:1/-1;display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap}
-h1{font-family:var(--display);font-weight:800;font-size:clamp(28px,4vw,40px);margin:0;letter-spacing:-.01em}
-h1 span{color:var(--accent)}
-.tag{color:var(--muted);font-size:13px}
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:18px;min-width:0}
-.tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--bg);border-radius:10px;padding:4px;gap:4px}
-.tabs button{background:none;border:0;color:var(--muted);padding:10px;border-radius:8px;font:600 14px var(--body);cursor:pointer}
-.tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
-label.h,.h{font-size:11px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:600;display:block;margin-bottom:8px}
-.opts{display:flex;flex-direction:column;gap:6px}
-.opt{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);border-radius:10px;cursor:pointer}
-.opt:has(input:checked){border-color:var(--accent);background:rgba(232,176,75,.07)}
-.opt input{accent-color:var(--accent);margin-top:3px}
-.opt > span > b{font-weight:600;display:block}
-.opt small{color:var(--muted);font-size:12.5px;line-height:1.4;display:block}
-.rec{color:var(--accent);font-size:11px;font-weight:600;margin-left:6px}
-select,input[type=text]{width:100%;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:10px;font:inherit}
-input[type=range]{width:100%;accent-color:var(--accent)}
-.row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+html,body{min-height:100%;margin:0}
+body{
+  color:var(--fg);font:15px/1.55 var(--sans);background-color:var(--bg);
+  background-image:
+    radial-gradient(900px 600px at 8% -10%, rgba(255,155,116,.13), transparent 65%),
+    radial-gradient(700px 500px at 110% 10%, rgba(140,120,255,.07), transparent 60%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .035 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-attachment:fixed;
+}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
 .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
-.btn{background:var(--accent);color:var(--accent-ink);border:0;border-radius:10px;padding:13px 16px;font:600 15px var(--body);cursor:pointer;width:100%}
-.btn.ghost{background:none;color:var(--fg);border:1px solid var(--line)}
-.btn.danger{background:none;color:var(--bad);border:1px solid var(--bad)}
-.btn:disabled{opacity:.45;cursor:not-allowed}
-button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.code{display:flex;gap:8px;align-items:center;background:var(--bg);border:1px dashed var(--accent);border-radius:10px;padding:12px 14px}
-.code .mono{font-size:20px;flex:1;letter-spacing:.06em;color:var(--accent);word-break:break-all}
-.code button{background:none;border:1px solid var(--line);color:var(--fg);border-radius:8px;padding:6px 10px;cursor:pointer;font:500 13px var(--body)}
-.screen{background:#000;border:1px solid var(--line);border-radius:14px;overflow:hidden;position:relative;aspect-ratio:16/9;max-width:100%;align-self:start}
-.screen video{width:100%;height:100%;display:block;background:#000;object-fit:contain}
-.empty{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:var(--muted);padding:24px}
-.empty strong{font-family:var(--display);font-size:24px;color:var(--fg);display:block;margin-bottom:6px;font-weight:600}
-.overlay{position:absolute;inset:auto 12px 12px auto;display:flex;gap:8px}
-.overlay button{background:rgba(0,0,0,.6);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:8px 12px;cursor:pointer;font:500 13px var(--body)}
-.unmute{position:absolute;inset:0;margin:auto;width:max-content;height:max-content;background:var(--accent);color:var(--accent-ink);border:0;border-radius:999px;padding:14px 22px;font:600 16px var(--body);cursor:pointer}
-.status{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--muted)}
-.dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex:none}
-.dot.ok{background:var(--ok)}.dot.warn{background:var(--warn)}.dot.bad{background:var(--bad)}
-.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
-@media (max-width:700px){.stats{grid-template-columns:repeat(3,1fr)}}@media (max-width:440px){.stats{grid-template-columns:repeat(2,1fr)}}
-.stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
-.stat .h{margin:0 0 2px}
-.stat .mono{font-size:16px}
-.note{font-size:13px;color:var(--muted);background:var(--bg);border-left:3px solid var(--accent);padding:10px 12px;border-radius:0 8px 8px 0}
+
+.app{min-height:100vh;display:flex;flex-direction:column}
+.top{display:flex;align-items:center;gap:16px;padding-block:16px;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:-.01em;white-space:nowrap}
+.brand svg{width:28px;height:28px;flex:none}
+.brand .name{font-size:15.5px}
+.top .spacer{flex:1}
+.me{display:flex;align-items:center;gap:8px;padding:4px 12px 4px 4px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-size:13.5px;color:var(--muted)}
+.me b{color:var(--fg);font-weight:600}
+
+/* avatares: a inicial do nome numa bolinha colorida */
+.av{--c:#ff9b74;width:28px;height:28px;border-radius:50%;display:inline-grid;place-items:center;flex:none;
+  background:color-mix(in srgb,var(--c) 22%,var(--surface-2));color:var(--c);font:700 12px var(--sans);
+  box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--c) 55%,transparent)}
+.av.lg{width:36px;height:36px;font-size:14px}
+.faces{display:flex;align-items:center}
+.faces .av{margin-left:-7px;box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--c) 55%,transparent),0 0 0 2.5px var(--bg)}
+.faces .av:first-child{margin-left:0}
+.faces .more{margin-left:8px;font-size:12.5px;color:var(--muted)}
+
+/* ---------- botões e campos ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:999px;padding:13px 22px;font-weight:700;font-size:15px;
+  background:linear-gradient(180deg,#ffb08f,var(--accent));color:var(--accent-ink);box-shadow:0 1px 0 rgba(255,255,255,.35) inset,0 12px 28px -14px rgba(255,155,116,.9);transition:transform .15s,filter .15s}
+.btn:hover{filter:brightness(1.05)}
+.btn:active{transform:translateY(1px)}
+.btn.block{width:100%}
+.btn.soft{background:var(--surface-2);color:var(--fg);box-shadow:inset 0 0 0 1px var(--line-2)}
+.btn.soft:hover{background:var(--surface-3)}
+.btn.danger{background:rgba(255,107,107,.1);color:#ff8f8f;box-shadow:inset 0 0 0 1px rgba(255,107,107,.35)}
+.btn.danger:hover{background:rgba(255,107,107,.16)}
+.btn.small{padding:9px 16px;font-size:13.5px}
+.btn:disabled{opacity:.45;cursor:not-allowed;filter:none;transform:none}
+.field{width:100%;background:var(--bg-2);border:1px solid var(--line-2);border-radius:var(--r-md);padding:12px 14px;outline:none;transition:border-color .15s,box-shadow .15s}
+.field:hover{border-color:rgba(255,236,224,.25)}
+.field:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(255,155,116,.15)}
+select.field{appearance:none;-webkit-appearance:none;padding-right:38px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23aba2ac' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 14px center}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.label{display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:8px}
+.hint{font-size:12.5px;color:var(--faint);margin-top:8px;line-height:1.5}
+.status{display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--muted)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--faint);flex:none}
+.dot.ok{background:var(--ok);box-shadow:0 0 0 4px rgba(111,214,168,.15)}
+.dot.warn{background:var(--warn);box-shadow:0 0 0 4px rgba(255,200,97,.15)}
+.dot.bad{background:var(--bad);box-shadow:0 0 0 4px rgba(255,107,107,.15)}
+.note{font-size:13px;color:var(--muted);background:var(--bg-2);border:1px solid var(--line);padding:12px 14px;border-radius:var(--r-md)}
 .note b{color:var(--fg)}
-.audiobar{display:grid;grid-template-columns:auto 1fr auto 110px;gap:12px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
-@media (max-width:600px){.audiobar{grid-template-columns:auto 1fr}.audiobar .alabel{grid-column:1/-1}.audiobar input{grid-column:1/-1}}
-.meter{height:8px;background:var(--bg);border-radius:4px;overflow:hidden}
-.meter i{display:block;height:100%;width:0;background:var(--ok);transition:width .1s}
-.alabel{font-size:13px;color:var(--muted)}
-.main{display:flex;flex-direction:column;gap:16px;min-width:0}
-.viewers{font-size:13.5px;color:var(--muted)}
-details{font-size:13.5px;color:var(--muted)} details summary{cursor:pointer;color:var(--fg)}
-details ol{padding-left:18px;margin:8px 0 0}
-@media (prefers-reduced-motion:no-preference){.btn,.opt{transition:background .15s,border-color .15s}}
-.linkrow{display:flex;gap:8px}.linkrow input{flex:1;min-width:0;font-family:var(--mono);font-size:13px}.linkrow button{flex:none;background:var(--accent);color:var(--accent-ink);border:0;border-radius:8px;padding:0 14px;font:600 13px var(--body);cursor:pointer}
-.linkrow select{flex:1;min-width:0}
-.hint{font-size:12.5px;color:var(--muted);margin-top:6px}
+details{font-size:13.5px;color:var(--muted)}
+details > summary{cursor:pointer;color:var(--fg);font-weight:600;list-style:none;display:flex;align-items:center;gap:8px}
+details > summary::-webkit-details-marker{display:none}
+details > summary::before{content:"";width:7px;height:7px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(-45deg);transition:transform .2s;flex:none;margin-right:2px}
+details[open] > summary::before{transform:rotate(45deg)}
+details ol{padding-left:20px;margin:10px 0 0}
+details li{margin:4px 0}
+details p{margin:8px 0 0}
+
+/* ---------- tela inicial ---------- */
+.home{flex:1;width:100%;max-width:980px;margin:0 auto;padding-block:5vh 56px;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:28px}
+.hello{font:400 clamp(44px,6.4vw,76px)/1.0 var(--serif);letter-spacing:-.015em;margin:0;text-wrap:balance}
+.hello em{color:var(--accent);font-style:italic}
+.lede{margin:-8px 0 0;color:var(--muted);font-size:17px;max-width:52ch}
+.whoami{display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:14px;color:var(--muted)}
+.whoami .field{width:220px;padding:9px 14px;border-radius:999px}
+.choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+@media (max-width:760px){.choices{grid-template-columns:1fr}}
+.choice{position:relative;background:linear-gradient(180deg,var(--surface),#19161c);border:1px solid var(--line);border-radius:var(--r-lg);padding:26px;display:flex;flex-direction:column;gap:14px;min-width:0;overflow:hidden}
+.choice h2{font:400 32px/1.05 var(--serif);margin:0;letter-spacing:-.01em}
+.choice p{margin:0;color:var(--muted)}
+.choice .art{height:92px;margin:-6px 0 2px}
+.choice .grow{flex:1}
+.joinrow{display:flex;gap:10px}
+.joinrow .field{flex:1;min-width:0;font-family:var(--mono);font-size:14px}
+.how{border-top:1px solid var(--line);padding-top:20px}
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-top:14px}
+@media (max-width:760px){.steps{grid-template-columns:1fr}}
+.step{display:flex;gap:12px;align-items:flex-start;color:var(--muted);font-size:14px}
+.step .n{font:400 26px/1 var(--serif);color:var(--accent);flex:none;width:22px}
+.step b{color:var(--fg);font-weight:600}
+
+/* ---------- preparar a sessão ---------- */
+.setup{flex:1;width:100%;max-width:640px;margin:0 auto;padding-block:2vh 56px;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:26px}
+.back{align-self:flex-start;background:none;border:0;color:var(--muted);font-weight:600;font-size:14px;padding:6px 0;display:flex;align-items:center;gap:8px}
+.back:hover{color:var(--fg)}
+.setup h1{font:400 clamp(36px,5vw,52px)/1.02 var(--serif);margin:0;letter-spacing:-.01em}
+.setup h1 em{color:var(--accent)}
+.block{display:flex;flex-direction:column;gap:10px}
+.block > .label{font-size:14px;color:var(--fg);margin:0}
+.presets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (max-width:520px){.presets{grid-template-columns:1fr}}
+.preset{text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:14px;display:flex;flex-direction:column;gap:4px;transition:border-color .15s,background .15s}
+.preset:hover{background:var(--surface-2)}
+.preset b{font-weight:700;font-size:15px}
+.preset span{color:var(--muted);font-size:12.5px}
+.preset[aria-pressed="true"]{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 9%,var(--surface));box-shadow:0 0 0 4px rgba(255,155,116,.1)}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{display:flex;gap:12px;align-items:flex-start;padding:14px;border:1px solid var(--line);border-radius:var(--r-md);cursor:pointer;background:var(--surface);transition:border-color .15s,background .15s}
+.opt:hover{background:var(--surface-2)}
+.opt:has(input:checked){border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,var(--surface))}
+.opt input{appearance:none;-webkit-appearance:none;width:18px;height:18px;margin:2px 0 0;border-radius:50%;border:2px solid var(--faint);flex:none;display:grid;place-items:center;cursor:pointer}
+.opt input:checked{border-color:var(--accent)}
+.opt input:checked::after{content:"";width:8px;height:8px;border-radius:50%;background:var(--accent)}
+.opt > span > b{font-weight:600;display:block}
+.opt small{color:var(--muted);font-size:13px;line-height:1.45;display:block;margin-top:2px}
+.rec{display:inline-block;vertical-align:1px;margin-left:6px;padding:1px 8px;border-radius:999px;background:rgba(255,155,116,.14);color:var(--accent);font:700 10.5px var(--sans);letter-spacing:.06em;text-transform:uppercase}
+.adv{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:14px 16px}
+.adv[open]{padding-bottom:18px}
+.adv .inner{display:flex;flex-direction:column;gap:18px;margin-top:16px}
+.row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.linkrow{display:flex;gap:8px}
+.linkrow .field,.linkrow select{flex:1;min-width:0}
+
+/* ---------- sessão ---------- */
+.session{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px;padding-block:0 20px;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px));min-height:0}
+.session.noside{grid-template-columns:minmax(0,1fr)}
+.session.noside .side{display:none}
+@media (max-width:980px){.session{grid-template-columns:1fr}}
+.stage{display:flex;flex-direction:column;gap:12px;min-width:0}
+.screen{position:relative;background:#050406;border-radius:var(--r-lg);overflow:hidden;aspect-ratio:16/9;width:100%;max-width:100%;
+  box-shadow:0 0 0 1px var(--line),0 40px 90px -40px rgba(0,0,0,.9);transition:box-shadow .5s}
+.screen.live{box-shadow:0 0 0 1px rgba(255,155,116,.28),0 0 90px -30px rgba(255,155,116,.35),0 40px 90px -40px rgba(0,0,0,.9)}
+.screen video{width:100%;height:100%;display:block;background:#050406;object-fit:contain}
+.screen:fullscreen{border-radius:0}
+.empty{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:var(--muted);padding:24px;background:radial-gradient(70% 80% at 50% 40%,#1f1a22,#070608)}
+.empty strong{font:400 32px/1.1 var(--serif);color:var(--fg);display:block;margin-bottom:8px}
+.spinner{width:34px;height:34px;margin:0 auto 18px;border-radius:50%;border:3px solid rgba(255,236,224,.12);border-top-color:var(--accent)}
+@media (prefers-reduced-motion:no-preference){.spinner{animation:spin 1s linear infinite}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.onair{position:absolute;top:16px;left:16px;display:flex;align-items:center;gap:8px;padding:6px 12px 6px 10px;border-radius:999px;background:rgba(12,9,13,.66);backdrop-filter:blur(8px);font:700 11.5px var(--sans);letter-spacing:.1em;color:#fff;transition:opacity .3s;z-index:3}
+.onair i{width:8px;height:8px;border-radius:50%;background:var(--live);box-shadow:0 0 10px var(--live)}
+@media (prefers-reduced-motion:no-preference){.onair i{animation:pulse 1.8s ease-in-out infinite}}
+@keyframes pulse{50%{opacity:.35}}
+.onair span{font-weight:600;letter-spacing:.02em;color:#ddd0cc}
+.screen.idle .onair{opacity:.3}
+.overlay{position:absolute;top:14px;right:14px;display:flex;gap:8px;transition:opacity .3s;z-index:3}
+.screen.idle .overlay,.screen.idle .reactbar{opacity:0;pointer-events:none}
+.screen.idle{cursor:none}
+.overlay button,.reactbar button{background:rgba(12,9,13,.66);backdrop-filter:blur(8px);color:#fff;border:1px solid rgba(255,255,255,.14);border-radius:999px}
+.overlay button{padding:8px 14px;font-weight:600;font-size:13px}
+.overlay button:hover,.reactbar button:hover{background:rgba(40,30,40,.85)}
+.unmute{position:absolute;inset:0;margin:auto;width:max-content;height:max-content;z-index:4}
+/* reações: botões embaixo do vídeo e emojis subindo */
+.reactbar{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);display:flex;gap:6px;padding:6px;border-radius:999px;background:rgba(12,9,13,.5);backdrop-filter:blur(8px);transition:opacity .3s;z-index:3}
+.reactbar button{width:42px;height:42px;font-size:21px;line-height:1;display:grid;place-items:center;padding:0;border-color:transparent;background:transparent}
+.reactbar button:hover{transform:translateY(-2px) scale(1.08)}
+.floaters{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:2}
+.floater{position:absolute;bottom:70px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:38px;line-height:1;filter:drop-shadow(0 4px 10px rgba(0,0,0,.45))}
+.floater small{font:600 11px var(--sans);color:#fff;background:rgba(12,9,13,.6);padding:2px 7px;border-radius:999px}
+@media (prefers-reduced-motion:no-preference){.floater{animation:rise 3.2s cubic-bezier(.2,.7,.3,1) forwards}}
+@media (prefers-reduced-motion:reduce){.floater{animation:fade 2.6s forwards}}
+@keyframes rise{0%{transform:translateY(20px) scale(.6);opacity:0}12%{transform:translateY(0) scale(1);opacity:1}80%{opacity:1}100%{transform:translateY(-240px) scale(1);opacity:0}}
+@keyframes fade{0%,70%{opacity:1}100%{opacity:0}}
+/* conversa flutuando no vídeo quando a lateral está fechada ou em tela cheia */
+.chatfloat{position:absolute;left:16px;bottom:78px;display:flex;flex-direction:column;gap:6px;max-width:min(380px,60%);pointer-events:none;z-index:2}
+.chatfloat .msg{background:rgba(12,9,13,.72);backdrop-filter:blur(8px);border-radius:14px;padding:7px 12px;font-size:14px;color:#f5f0ea}
+@media (prefers-reduced-motion:no-preference){.chatfloat .msg{animation:slidein .25s ease-out}}
+@keyframes slidein{from{opacity:0;transform:translateY(6px)}}
+
+.bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:10px 12px 10px 16px}
+.bar .grow{flex:1;min-width:120px}
+.sound{display:flex;align-items:center;gap:12px;min-width:0}
+.sound .alabel{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meter{width:120px;height:8px;border-radius:999px;overflow:hidden;background:var(--bg-2);flex:none}
+.meter i{display:block;height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,var(--ok),var(--accent-2) 70%,var(--accent));background-size:var(--full,100% 100%);transition:width .08s}
+.vol{display:flex;align-items:center;gap:8px;color:var(--muted)}
+.vol input{width:110px}
+.vol svg{width:18px;height:18px;flex:none}
+.iconbtn{display:inline-flex;align-items:center;gap:8px;background:none;border:0;color:var(--muted);font-weight:600;font-size:13.5px;padding:8px 10px;border-radius:999px}
+.iconbtn:hover{background:var(--surface-2);color:var(--fg)}
+.iconbtn svg{width:17px;height:17px}
+.stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md)}
+.stat{padding:10px 14px;min-width:0}
+.stat + .stat{border-left:1px solid var(--line)}
+.stat .k{display:block;font-size:11.5px;color:var(--faint);font-weight:600}
+.stat .mono{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+@media (max-width:640px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.stat + .stat{border-left:0}.stat:nth-child(even){border-left:1px solid var(--line)}.stat:nth-child(n+3){border-top:1px solid var(--line)}}
+
+.side{display:flex;flex-direction:column;gap:12px;min-width:0;min-height:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.card h3{margin:0;font:400 24px/1.1 var(--serif)}
+.card .sub{font-size:13px;color:var(--muted);margin-top:-6px}
+/* código da sala, como um ingresso */
+.ticket{display:flex;align-items:stretch;background:linear-gradient(135deg,#ffb593,var(--accent));color:var(--accent-ink);border-radius:12px;
+  -webkit-mask:radial-gradient(circle at 0 50%,transparent 8px,#000 8.5px) left/51% 100% no-repeat,radial-gradient(circle at 100% 50%,transparent 8px,#000 8.5px) right/51% 100% no-repeat;
+  mask:radial-gradient(circle at 0 50%,transparent 8px,#000 8.5px) left/51% 100% no-repeat,radial-gradient(circle at 100% 50%,transparent 8px,#000 8.5px) right/51% 100% no-repeat}
+.ticket .mono{flex:1;min-width:0;font-weight:700;font-size:17px;padding:14px 8px 14px 18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--accent-ink)}
+.ticket button{flex:none;background:none;border:0;border-left:2px dashed rgba(43,18,9,.35);color:var(--accent-ink);padding:0 16px 0 14px;font-weight:700;font-size:13px}
+.ticket button:hover{background:rgba(0,0,0,.05)}
+.people{display:flex;flex-direction:column;gap:8px}
+.person{display:flex;align-items:center;gap:10px;font-size:14px}
+.person .tag{margin-left:auto;font-size:11.5px;color:var(--faint);font-weight:600}
+.chatcard{flex:1;min-height:320px;padding:0;gap:0;overflow:hidden}
+.chathead{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 10px;border-bottom:1px solid var(--line)}
+.chathead h3{font-size:22px}
+.chatlist{flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:10px;min-height:0;max-height:52vh}
+.chatlist .empty-chat{margin:auto;text-align:center;color:var(--faint);font-size:13.5px;padding:20px 8px}
+.cm{display:flex;gap:10px;align-items:flex-start}
+.cm .body{min-width:0}
+.cm .who{font-size:12.5px;font-weight:700}
+.cm .text{font-size:14px;color:#e9e2dc;word-wrap:break-word;overflow-wrap:anywhere}
+.cm.sys{justify-content:center;color:var(--faint);font-size:12.5px;text-align:center}
+.chatform{display:flex;gap:8px;padding:10px 12px 12px;border-top:1px solid var(--line)}
+.chatform .field{flex:1;min-width:0;border-radius:999px;padding:10px 14px}
+.chatform button{flex:none;width:42px;height:42px;border-radius:50%;border:0;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center}
+.chatform button svg{width:18px;height:18px}
+/* aviso de versão nova */
+.toast{position:fixed;right:max(20px,env(safe-area-inset-right,0px));bottom:max(20px,env(safe-area-inset-bottom,0px));z-index:50;display:flex;align-items:center;gap:14px;max-width:min(420px,calc(100vw - 40px));
+  background:var(--surface-2);border:1px solid var(--line-2);border-radius:18px;padding:12px 12px 12px 16px;box-shadow:0 24px 60px -20px rgba(0,0,0,.8)}
+.toast .t{font-size:13.5px;color:var(--muted);min-width:0}
+.toast .t b{display:block;color:var(--fg);font-size:14.5px}
+.toast .bar2{height:4px;border-radius:999px;background:var(--bg-2);margin-top:8px;overflow:hidden}
+.toast .bar2 i{display:block;height:100%;width:0;background:var(--accent);transition:width .3s}
+.toast .x{background:none;border:0;color:var(--faint);font-size:18px;line-height:1;padding:6px}
+@media (prefers-reduced-motion:no-preference){.toast{animation:slidein .3s ease-out}}
+@media (prefers-reduced-motion:no-preference){.preset,.opt,.btn,.iconbtn,.reactbar button{transition:background .15s,border-color .15s,transform .15s,filter .15s,color .15s}}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <h1>Sessão de <span>Série</span></h1>
-    <div class="tag">Transmissão direta navegador → navegador, sem OBS e sem servidor de vídeo.</div>
+<div class="app" id="app" data-view="home">
+  <header class="top">
+    <div class="brand">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffc580"/><stop offset="1" stop-color="#ff8f6b"/></linearGradient></defs><rect width="32" height="32" rx="9" fill="#2a2030"/><path d="M12 9.6v12.8c0 .8.9 1.3 1.6.9l10-6.4c.6-.4.6-1.3 0-1.7l-10-6.4c-.7-.5-1.6 0-1.6.8z" fill="url(#lg)"/><path d="M24.6 6.2c-1-1-2.5-.4-2.6.8-.1-1.2-1.6-1.8-2.6-.8-.8.8-.6 2.1.3 2.9l2.3 2 2.3-2c.9-.8 1.1-2.1.3-2.9z" fill="#ff5f7a"/></svg>
+      <span class="name">Sessão de Série</span>
+    </div>
+    <div class="faces" id="topFaces" hidden></div>
+    <div class="spacer"></div>
+    <div class="me" id="meChip" title="Seu nome na sala"><span class="av" id="meAv">?</span><span>Você é <b id="meName">…</b></span></div>
   </header>
 
-  <aside class="panel">
-    <div class="tabs" role="tablist">
-      <button id="tabHost" role="tab" aria-selected="true">Vou transmitir</button>
-      <button id="tabView" role="tab" aria-selected="false">Vou assistir</button>
+  <!-- ========== INÍCIO ========== -->
+  <section class="home" id="home">
+    <div>
+      <h1 class="hello" id="hello">Oi, <em id="helloName">pessoa</em>.<br>Bora assistir junto?</h1>
+    </div>
+    <p class="lede">Abra uma sala, mande o código e cada um assiste do próprio sofá, com imagem e som direto do seu PC.</p>
+    <label class="whoami" for="nameInput">Seus amigos vão te ver como <input class="field" id="nameInput" maxlength="24" placeholder="Seu nome" autocomplete="off"></label>
+
+    <div class="choices">
+      <article class="choice">
+        <svg class="art" viewBox="0 0 220 92" aria-hidden="true"><rect x="2" y="6" width="150" height="84" rx="12" fill="#26222b" stroke="rgba(255,236,224,.15)"/><path d="M66 32v28c0 2 2 3 4 2l22-14c1.5-1 1.5-3 0-4L70 30c-2-1-4 0-4 2z" fill="#ff9b74"/><circle cx="182" cy="24" r="14" fill="#2f2a35" stroke="#7cc4ff" stroke-width="2"/><circle cx="196" cy="52" r="14" fill="#2f2a35" stroke="#b69cff" stroke-width="2"/><circle cx="174" cy="72" r="12" fill="#2f2a35" stroke="#6fd6a8" stroke-width="2"/><path d="M152 40c8-2 12-8 16-12M152 52c14 0 22 0 30 0M152 66c8 2 12 4 12 4" stroke="rgba(255,236,224,.2)" stroke-width="2" fill="none" stroke-dasharray="3 5"/></svg>
+        <h2>Começar uma sessão</h2>
+        <p class="grow">Você escolhe a janela da série ou do jogo, e o som dela vai junto. Seus amigos entram com o código.</p>
+        <button class="btn block" id="goHost">Começar uma sessão</button>
+      </article>
+      <article class="choice">
+        <svg class="art" viewBox="0 0 220 92" aria-hidden="true"><rect x="2" y="16" width="190" height="60" rx="12" fill="#ff9b74" opacity=".95"/><circle cx="2" cy="46" r="10" fill="#1d1a21"/><circle cx="192" cy="46" r="10" fill="#1d1a21"/><path d="M146 22v48" stroke="#2b1209" stroke-opacity=".35" stroke-width="2" stroke-dasharray="4 4"/><rect x="22" y="36" width="96" height="10" rx="5" fill="#2b1209" opacity=".55"/><rect x="22" y="52" width="60" height="7" rx="3.5" fill="#2b1209" opacity=".3"/></svg>
+        <h2>Entrar numa sessão</h2>
+        <p>Cole o código que te mandaram.</p>
+        <div class="joinrow">
+          <input class="field" type="text" id="joinCode" placeholder="serie-k3v6q2" autocomplete="off" spellcheck="false" aria-label="Código da sala">
+          <button class="btn" id="joinBtn">Entrar</button>
+        </div>
+        <div class="status"><span class="dot" id="viewDot"></span><span id="viewStatus">O código parece com serie-k3v6q2.</span></div>
+      </article>
     </div>
 
-    <!-- ========== TRANSMITIR ========== -->
-    <section id="hostPane" class="stack">
-      <div>
-        <span class="h">Qual áudio enviar</span>
-        <div class="opts">
-          <label class="opt"><input type="radio" name="audio" value="tab" checked>
-            <span><b>Só o som da aba <span class="rec">RECOMENDADO</span></b>
-            <small>Ao compartilhar, escolha <b>Guia do Chrome</b> e deixe ligado "Compartilhar áudio da guia". Discord fica de fora.</small></span></label>
-          <label class="opt"><input type="radio" name="audio" value="app">
-            <span><b>Som de um programa <span class="rec">PARA JOGOS</span></b>
-            <small>Envia só o som do jogo que você escolher, com o app do Discord normal. Precisa do Ajudante de Som aberto.</small></span></label>
-          <label class="opt"><input type="radio" name="audio" value="game">
-            <span><b>Som do PC sem o navegador</b>
-            <small>Tira tudo o que toca no navegador. Com o Discord pelo navegador, ele fica de fora. Sem precisar do ajudante.</small></span></label>
-          <label class="opt"><input type="radio" name="audio" value="device">
-            <span><b>Um dispositivo de áudio</b>
-            <small>Ex.: "CABLE Output" (VB-Cable) ou "Mixagem estéreo".</small></span></label>
-          <label class="opt"><input type="radio" name="audio" value="system">
-            <span><b>Todo o som do PC</b>
-            <small>Pega tudo, inclusive o Discord. Use só se o Discord estiver fechado ou em outro fone.</small></span></label>
-          <label class="opt"><input type="radio" name="audio" value="none">
-            <span><b>Sem áudio</b></span></label>
+    <div class="how">
+      <details>
+        <summary>Como funciona</summary>
+        <div class="steps" id="howList">
+          <div class="step"><span class="n">1</span><div><b>Quem transmite</b> clica em Começar, escolhe a janela e o som vai junto.</div></div>
+          <div class="step"><span class="n">2</span><div><b>Manda o código</b> da sala no grupo. Ele continua o mesmo nas próximas vezes.</div></div>
+          <div class="step"><span class="n">3</span><div><b>Os amigos</b> colam o código em Entrar numa sessão. Dá para conversar e reagir enquanto assistem.</div></div>
         </div>
+        <p id="howNote">O vídeo vai direto do seu PC para o dos amigos, sem passar por servidor de vídeo. Se a conexão cair, a sala tenta voltar sozinha.</p>
+      </details>
+      <details id="linkHelp" style="margin-top:14px">
+        <summary>Como ter um link para o navegador (grátis)</summary>
+        <ol>
+          <li>Crie uma conta em <b>github.com</b> e clique em <b>New repository</b> (marque como Public).</li>
+          <li>Clique em <b>uploading an existing file</b> e envie este arquivo com o nome <b>index.html</b>.</li>
+          <li>Vá em <b>Settings → Pages</b>, em "Branch" escolha <b>main</b> e salve.</li>
+          <li>Em um ou dois minutos aparece o endereço do site. Abra a página por ele e o link da sala passa a funcionar.</li>
+        </ol>
+      </details>
+    </div>
+  </section>
+
+  <!-- ========== PREPARAR A SESSÃO ========== -->
+  <section class="setup" id="setup" hidden>
+    <button class="back" id="backHome" type="button"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>Voltar</button>
+    <h1>O que vamos <em>ver</em> hoje?</h1>
+
+    <div class="block">
+      <span class="label">Qualidade</span>
+      <div class="presets" id="presets">
+        <button class="preset" type="button" data-preset="serie"><b>Série ou filme</b><span>1080p, 30 quadros. Imagem nítida.</span></button>
+        <button class="preset" type="button" data-preset="jogo"><b>Jogo</b><span>1080p, 60 quadros. Movimento liso.</span></button>
+        <button class="preset" type="button" data-preset="leve"><b>Internet fraca</b><span>720p. Trava menos.</span></button>
+      </div>
+    </div>
+
+    <div class="block">
+      <span class="label">Som</span>
+      <div class="opts">
+        <label class="opt"><input type="radio" name="audio" value="tab" checked>
+          <span><b>Só o som da aba <span class="rec">recomendado</span></b>
+          <small>Ao compartilhar, escolha <b>Guia do Chrome</b> e deixe ligado "Compartilhar áudio da guia". O Discord fica de fora.</small></span></label>
+        <label class="opt"><input type="radio" name="audio" value="app">
+          <span><b>Som de um programa <span class="rec">para jogos</span></b>
+          <small>Envia só o som do jogo que você escolher, com o app do Discord normal. Precisa do Ajudante de Som aberto.</small></span></label>
+        <label class="opt"><input type="radio" name="audio" value="system">
+          <span><b>Todo o som do PC</b>
+          <small>Pega tudo, inclusive o Discord. Use só se o Discord estiver fechado ou em outro fone.</small></span></label>
+        <label class="opt"><input type="radio" name="audio" value="none">
+          <span><b>Sem som</b></span></label>
       </div>
 
       <div id="appBox" hidden>
-        <div class="status" style="margin-bottom:10px"><span class="dot" id="appDot"></span><span id="appStatus">Procurando o Ajudante de Som…</span></div>
-        <div id="appMissing" class="note" hidden>
+        <div class="status"><span class="dot" id="appDot"></span><span id="appStatus">Procurando o Ajudante de Som…</span></div>
+        <div id="appMissing" class="note" hidden style="margin-top:10px">
           Abra o <b>AjudanteDeSom.exe</b> e deixe a janela dele aberta. Esta página se conecta sozinha.
-          <div style="margin-top:6px">Na primeira vez, o Windows pode mostrar "O Windows protegeu o computador": clique em <b>Mais informações → Executar assim mesmo</b>. O navegador também vai pedir permissão para acessar a rede local ou os aplicativos do seu PC: clique em <b>Permitir</b>. Se clicou em Bloquear sem querer, clique no ícone ao lado do endereço do site e libere essa permissão.</div>
+          <div style="margin-top:6px">Na primeira vez, o Windows pode mostrar "O Windows protegeu o computador": clique em <b>Mais informações → Executar assim mesmo</b>. O navegador também vai pedir permissão para acessar a rede local ou os aplicativos do seu PC: clique em <b>Permitir</b>.</div>
         </div>
-        <div id="appPick" hidden>
-          <label class="h" for="appSel">Programa</label>
+        <div id="appPick" hidden style="margin-top:10px">
+          <label class="label" for="appSel">Programa</label>
           <div class="linkrow">
-            <select id="appSel"></select>
-            <button id="appRefresh" type="button">Atualizar</button>
+            <select class="field" id="appSel"></select>
+            <button class="btn soft small" id="appRefresh" type="button">Atualizar</button>
           </div>
-          <div class="hint">Abra o jogo antes e escolha a janela dele aqui. Depois, clique em começar e compartilhe a janela do jogo.</div>
+          <div class="hint">Abra o jogo antes e escolha a janela dele aqui.</div>
         </div>
       </div>
 
@@ -144,106 +373,130 @@ details ol{padding-left:18px;margin:8px 0 0}
         </ol>
         <div id="gameCompat" style="margin-top:8px"></div>
       </div>
+    </div>
 
-      <div id="deviceBox" hidden>
-        <label class="h" for="deviceSel">Dispositivo</label>
-        <select id="deviceSel"><option value="">Clique em "Listar dispositivos"</option></select>
-        <button class="btn ghost" id="listDev" style="margin-top:8px">Listar dispositivos</button>
-      </div>
-
-      <div>
-        <label class="h" for="quality">Qualidade</label>
-        <select id="quality">
-          <option value="720-30">720p · 30 FPS (internet fraca)</option>
-          <option value="1080-30" selected>1080p · 30 FPS (ideal para série)</option>
-          <option value="1080-60">1080p · 60 FPS (jogos)</option>
-        </select>
-      </div>
-
-      <div>
-        <label class="h" for="codec">Codec de vídeo</label>
-        <select id="codec"></select>
-        <div class="hint" id="codecHint">Codecs modernos deixam a imagem mais nítida com a mesma internet.</div>
-      </div>
-
-      <div>
-        <div class="row"><label class="h" for="bitrate">Taxa de vídeo</label><span class="mono" id="bitrateVal">5000 kbps</span></div>
-        <input type="range" id="bitrate" min="1500" max="12000" step="500" value="5000">
-        <div class="hint">É enviada para cada amigo. Com 2 amigos, conte o dobro do upload.</div>
-      </div>
-
-      <button class="btn" id="startBtn">Escolher tela e começar</button>
-      <button class="btn danger" id="stopBtn" hidden>Parar transmissão</button>
-
-      <div id="codeBox" hidden>
-        <span class="h" id="shareTitle">Link da sala — mande para os amigos</span>
-        <div class="linkrow" id="linkRow" hidden>
-          <input type="text" id="roomLink" readonly aria-label="Link da sala">
-          <button id="copyLinkBtn">Copiar link</button>
+    <details class="adv" id="advanced">
+      <summary>Ajustes avançados</summary>
+      <div class="inner">
+        <div class="opts" id="moreAudio">
+          <label class="opt"><input type="radio" name="audio" value="game">
+            <span><b>Som do PC sem o navegador</b>
+            <small>Tira tudo o que toca no navegador. Com o Discord pelo navegador, ele fica de fora.</small></span></label>
+          <label class="opt"><input type="radio" name="audio" value="device">
+            <span><b>Um dispositivo de áudio</b>
+            <small>Ex.: "CABLE Output" (VB-Cable) ou "Mixagem estéreo".</small></span></label>
         </div>
-        <div class="code" id="codeRow" style="margin-top:8px"><span class="mono" id="roomCode">…</span><button id="copyBtn">Copiar código</button></div>
-        <div class="hint" id="fileHint" hidden>Você abriu pelo arquivo, então o link não funciona para os amigos. Mande o código e este arquivo, ou hospede a página para ter um link (veja "Como ter um link").</div>
-        <button class="btn ghost" id="newCodeBtn" style="margin-top:8px">Gerar código novo</button>
+        <div id="deviceBox" hidden>
+          <label class="label" for="deviceSel">Dispositivo</label>
+          <div class="linkrow">
+            <select class="field" id="deviceSel"><option value="">Clique em "Listar"</option></select>
+            <button class="btn soft small" id="listDev" type="button">Listar</button>
+          </div>
+        </div>
+        <div>
+          <label class="label" for="quality">Resolução e quadros</label>
+          <select class="field" id="quality">
+            <option value="720-30">720p · 30 quadros</option>
+            <option value="1080-30" selected>1080p · 30 quadros</option>
+            <option value="1080-60">1080p · 60 quadros</option>
+          </select>
+        </div>
+        <div>
+          <label class="label" for="codec">Codec de vídeo</label>
+          <select class="field" id="codec"></select>
+          <div class="hint" id="codecHint">VP9 e AV1 deixam a imagem mais nítida com a mesma internet. H.264 pesa menos no PC.</div>
+        </div>
+        <div>
+          <div class="row"><label class="label" for="bitrate">Taxa de vídeo</label><span class="mono" id="bitrateVal">5000 kbps</span></div>
+          <input type="range" id="bitrate" min="1500" max="12000" step="500" value="5000">
+          <div class="hint">É enviada para cada amigo. Com 2 amigos, conte o dobro de upload.</div>
+        </div>
       </div>
+    </details>
+
+    <div class="block">
+      <button class="btn block" id="startBtn">Escolher janela e começar</button>
       <div class="status"><span class="dot" id="hostDot"></span><span id="hostStatus">Pronto para começar.</span></div>
-      <div class="viewers" id="viewers"></div>
-    </section>
+    </div>
+  </section>
 
-    <!-- ========== ASSISTIR ========== -->
-    <section id="viewPane" class="stack" hidden>
-      <div>
-        <label class="h" for="joinCode">Código da sala</label>
-        <input type="text" id="joinCode" placeholder="ex.: serie-k3v6q2" autocomplete="off">
+  <!-- ========== SESSÃO ========== -->
+  <section class="session" id="session" hidden>
+    <div class="stage">
+      <div class="screen" id="screen">
+        <video id="video" playsinline autoplay muted></video>
+        <div class="empty" id="empty"><div><div class="spinner" id="emptySpin" hidden></div><strong id="emptyTitle">Preparando a sala</strong><span id="emptyText">Só um instante.</span></div></div>
+        <div class="floaters" id="floaters"></div>
+        <div class="chatfloat" id="chatFloat"></div>
+        <div class="onair" id="liveBadge" hidden><i></i>AO VIVO<span id="liveCount"></span></div>
+        <div class="overlay"><button id="fsBtn" type="button">Tela cheia</button></div>
+        <div class="reactbar" id="reactBar" role="group" aria-label="Reações"></div>
+        <button class="btn unmute" id="unmuteBtn" hidden>Ativar som</button>
       </div>
-      <button class="btn" id="joinBtn">Entrar e assistir</button>
-      <button class="btn ghost" id="leaveBtn" hidden>Sair da sala</button>
-      <div class="status"><span class="dot" id="viewDot"></span><span id="viewStatus">Cole o código que seu amigo mandou.</span></div>
-    </section>
 
-    <details>
-      <summary>Como funciona</summary>
-      <ol>
-        <li>Quem transmite abre a página no <b>Chrome ou Edge</b> e clica em começar.</li>
-        <li>Manda o link da sala para os amigos (ou o arquivo e o código).</li>
-        <li>Os amigos abrem o link e clicam em "Entrar e assistir".</li>
-      </ol>
-      <p>O vídeo vai direto do seu PC para o dos amigos. Se a conexão cair, a página tenta reconectar sozinha. O código da sala fica o mesmo entre sessões, então o link pode ser salvo nos favoritos.</p>
-    </details>
-    <details>
-      <summary>Como ter um link (grátis)</summary>
-      <ol>
-        <li>Crie uma conta em <b>github.com</b> e clique em <b>New repository</b> (marque como Public).</li>
-        <li>Clique em <b>uploading an existing file</b> e envie este arquivo com o nome <b>index.html</b>.</li>
-        <li>Vá em <b>Settings → Pages</b>, em "Branch" escolha <b>main</b> e salve.</li>
-        <li>Em um ou dois minutos aparece o endereço do site. Abra a página por ele e o link da sala passa a funcionar.</li>
-      </ol>
-    </details>
-  </aside>
+      <div class="bar">
+        <div class="sound grow">
+          <div class="meter" title="Som"><i id="meterFill"></i></div>
+          <span id="audioLabel" class="alabel">—</span>
+        </div>
+        <label class="vol" title="Volume"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 8v4h3l4 3V5L6 8H3z" fill="currentColor"/><path d="M13 7.5a3.5 3.5 0 010 5M15 5a7 7 0 010 10" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg><input type="range" id="vol" min="0" max="1" step="0.05" value="1" aria-label="Volume"></label>
+        <button class="iconbtn" id="statsBtn" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 16V9M8 16V4M13 16v-5M18 16V7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Conexão</button>
+        <button class="iconbtn" id="sideBtn" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="2.5" y="3.5" width="15" height="13" rx="2.5" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M12.5 3.5v13" stroke="currentColor" stroke-width="1.6"/></svg><span id="sideBtnText">Esconder lateral</span></button>
+        <button class="btn soft small" id="switchBtn" hidden>Trocar janela</button>
+        <button class="btn danger small" id="stopBtn" hidden>Encerrar</button>
+        <button class="btn soft small" id="leaveBtn" hidden>Sair da sala</button>
+      </div>
 
-  <main class="main">
-    <div class="screen" id="screen">
-      <video id="video" playsinline autoplay muted></video>
-      <div class="empty" id="empty"><div><strong>Nada na tela ainda</strong>Comece uma transmissão ou entre com um código.</div></div>
-      <button class="unmute" id="unmuteBtn" hidden>Ativar som</button>
-      <div class="overlay"><button id="fsBtn">Tela cheia</button></div>
+      <div class="stats" id="statsBox" hidden>
+        <div class="stat"><span class="k">Resolução</span><span class="mono" id="sRes">—</span></div>
+        <div class="stat"><span class="k">Quadros</span><span class="mono" id="sFps">—</span></div>
+        <div class="stat"><span class="k">Vídeo</span><span class="mono" id="sKbps">—</span></div>
+        <div class="stat"><span class="k" id="sLossH">Perda</span><span class="mono" id="sLoss">—</span></div>
+        <div class="stat"><span class="k">Codec</span><span class="mono" id="sCodec">—</span></div>
+      </div>
     </div>
-    <div class="stats">
-      <div class="stat"><span class="h">Resolução</span><span class="mono" id="sRes">—</span></div>
-      <div class="stat"><span class="h">FPS</span><span class="mono" id="sFps">—</span></div>
-      <div class="stat"><span class="h">Vídeo</span><span class="mono" id="sKbps">—</span></div>
-      <div class="stat"><span class="h" id="sLossH">Perda</span><span class="mono" id="sLoss">—</span></div>
-      <div class="stat"><span class="h">Codec</span><span class="mono" id="sCodec">—</span></div>
-    </div>
-    <div class="audiobar">
-      <span class="h" style="margin:0">Áudio</span>
-      <div class="meter"><i id="meterFill"></i></div>
-      <span id="audioLabel" class="alabel">—</span>
-      <input type="range" id="vol" min="0" max="1" step="0.05" value="1" aria-label="Volume" title="Volume">
-    </div>
-    <div class="note"><b>Tela cheia na aba compartilhada:</b> enquanto a aba está sendo compartilhada, o Chrome deixa o vídeo em tela cheia só dentro da aba. Para ocupar o monitor inteiro, coloque o vídeo em tela cheia e depois aperte <b>F11</b>.</div>
-  </main>
+
+    <aside class="side" id="side">
+      <div class="card" id="codeBox" hidden>
+        <div><h3 id="roomTitle">Sua sala</h3></div>
+        <div class="sub" id="shareTitle">Mande o código para os amigos</div>
+        <div class="ticket" id="codeRow"><span class="mono" id="roomCode">…</span><button id="copyBtn" type="button">Copiar</button></div>
+        <div class="linkrow" id="linkRow" hidden>
+          <input class="field" type="text" id="roomLink" readonly aria-label="Link da sala">
+          <button class="btn soft small" id="copyLinkBtn" type="button">Copiar link</button>
+        </div>
+        <div class="hint" id="fileHint" hidden></div>
+        <div class="status"><span class="dot" id="hostDotB"></span><span id="hostStatusB">Abrindo a sala…</span></div>
+        <button class="iconbtn" id="newCodeBtn" type="button" style="align-self:flex-start;padding-left:0">Gerar código novo</button>
+      </div>
+
+      <div class="card" id="viewCard" hidden>
+        <h3 id="viewTitle">Na sala</h3>
+        <div class="status"><span class="dot" id="viewDotB"></span><span id="viewStatusB">Conectando…</span></div>
+      </div>
+
+      <div class="card">
+        <div class="row"><h3>Quem está aqui</h3><span class="hint" id="viewers" style="margin:0"></span></div>
+        <div class="people" id="peopleList"></div>
+      </div>
+
+      <div class="card chatcard">
+        <div class="chathead"><h3>Conversa</h3></div>
+        <div class="chatlist" id="chatList" aria-live="polite"><div class="empty-chat" id="chatEmpty">Diga oi. As mensagens aparecem aqui e em cima do vídeo quando a lateral estiver fechada.</div></div>
+        <form class="chatform" id="chatForm" autocomplete="off">
+          <input class="field" id="chatInput" maxlength="300" placeholder="Escreva uma mensagem" aria-label="Mensagem">
+          <button type="submit" aria-label="Enviar"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 10l14-6-5 14-2.5-5.5L3 10z" fill="currentColor"/></svg></button>
+        </form>
+      </div>
+    </aside>
+  </section>
+
+  <div class="toast" id="updToast" hidden role="status">
+    <div class="t"><b id="updTitle">Versão nova</b><span id="updText"></span><div class="bar2" id="updBar"><i id="updFill"></i></div></div>
+    <button class="btn small" id="updBtn" hidden>Reiniciar agora</button>
+    <button class="x" id="updClose" aria-label="Fechar aviso">×</button>
+  </div>
 </div>
-
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script>
 (() => {
@@ -254,6 +507,30 @@ details ol{padding-left:18px;margin:8px 0 0}
     { urls: "stun:stun.cloudflare.com:3478" }
   ]};
   const isHosted = /^https?:$/.test(location.protocol);
+  // Rodando dentro do app "Sessão de Série" para Windows?
+  const inApp = !!(window.sessaoApp && window.sessaoApp.isApp);
+  if (inApp) {
+    // a captura é feita pelo app: as opções que dependem de aba do navegador não se aplicam
+    ["tab", "game"].forEach(v => { const r = document.querySelector(`input[name=audio][value="${v}"]`); if (r) r.closest("label").hidden = true; });
+    const appOpt = document.querySelector('input[name=audio][value="app"]');
+    if (appOpt) {
+      const lab = appOpt.closest("label");
+      lab.querySelector("b").innerHTML = 'Som da janela escolhida <span class="rec">recomendado</span>';
+      lab.querySelector("small").textContent = "O som vem só da janela que você transmitir, como no Discord. A conversa do Discord fica de fora.";
+    }
+    {
+      // a lista de programas só é usada se a pessoa transmitir a tela inteira
+      const pick = $("appPick"), box = document.createElement("details");
+      const sum = document.createElement("summary");
+      sum.textContent = "Vai transmitir a tela inteira? Veja de onde vem o som";
+      box.style.marginTop = "12px"; box.appendChild(sum);
+      pick.parentNode.insertBefore(box, pick); box.appendChild(pick);
+      pick.querySelector(".hint").textContent = "Só vale para a tela inteira. O padrão envia todo o som do PC, menos o Discord. Escolhendo uma janela, o som vem só dela.";
+    }
+    $("appMissing").innerHTML = "O ajudante de som do app não respondeu. Feche o app (inclusive na bandeja, perto do relógio) e abra de novo.";
+    $("linkHelp").hidden = true;
+    $("howNote").textContent = "O vídeo vai direto do seu PC para o dos amigos, sem passar por servidor de vídeo. Se a conexão cair, o app tenta voltar sozinho. Para ter também um link de navegador, aperte Alt e vá em App → Link para quem não tem o app.";
+  }
   const video = $("video");
 
   // ---------- configurações lembradas ----------
@@ -263,17 +540,32 @@ details ol{padding-left:18px;margin:8px 0 0}
   };
 
   // ---------- abas ----------
-  function setTab(host){
-    $("tabHost").setAttribute("aria-selected", host);
-    $("tabView").setAttribute("aria-selected", !host);
-    $("hostPane").hidden = !host; $("viewPane").hidden = host;
+  // ---------- telas: início, preparar, sessão ----------
+  let role = "host";
+  function setTab(host){ role = host ? "host" : "view"; }
+  function setView(v){
+    $("app").dataset.view = v;
+    $("home").hidden = v !== "home";
+    $("setup").hidden = v !== "setup";
+    $("session").hidden = v !== "session";
+    const host = role === "host";
+    $("codeBox").hidden = !host; $("viewCard").hidden = host;
+    $("switchBtn").hidden = !host || v !== "session"; $("stopBtn").hidden = !host || v !== "session";
+    $("leaveBtn").hidden = host || v !== "session";
+    $("topFaces").hidden = v !== "session";
+    window.scrollTo(0, 0);
   }
-  $("tabHost").onclick = () => setTab(true);
-  $("tabView").onclick = () => setTab(false);
+
+  // Selo "AO VIVO" na tela
+  function setLive(on, count){
+    $("liveBadge").hidden = !on;
+    $("screen").classList.toggle("live", !!on);
+    $("liveCount").textContent = on && count ? " · " + count : "";
+  }
 
   function setStatus(which, text, level){
-    $(which + "Status").textContent = text;
-    $(which + "Dot").className = "dot" + (level ? " " + level : "");
+    [which + "Status", which + "StatusB"].forEach(id => { const el = $(id); if (el) el.textContent = text; });
+    [which + "Dot", which + "DotB"].forEach(id => { const el = $(id); if (el) el.className = "dot" + (level ? " " + level : ""); });
   }
 
   // ---------- SDP: áudio estéreo e codec preferido ----------
@@ -352,6 +644,8 @@ details ol{padding-left:18px;margin:8px 0 0}
       let peak = 0; for (const v of buf) peak = Math.max(peak, Math.abs(v - 128));
       const pct = Math.min(100, peak / 128 * 160);
       $("meterFill").style.width = pct + "%";
+      // as cores do medidor ficam presas à barra inteira (verde, amarelo, vermelho), não ao pedaço aceso
+      $("meterFill").style.setProperty("--full", pct > 0.5 ? (10000 / pct) + "% 100%" : "100% 100%");
       const now = performance.now();
       if (pct > 2) { silentSince = now; setAudioLabel(isHost ? "Enviando som" : "Recebendo som", "ok"); }
       else if (now - silentSince > 8000) setAudioLabel(isHost ? "Faixa de som ativa, mas em silêncio" : "Conectado, mas chegando silêncio", "bad");
@@ -431,10 +725,9 @@ details ol{padding-left:18px;margin:8px 0 0}
   function fillApps(apps){
     const sel = $("appSel"), prevPid = sel.value, prevName = store.get("appName", "");
     sel.innerHTML = "";
-    if (!apps.length) {
-      sel.innerHTML = '<option value="">Nenhum programa com janela aberta</option>';
-      return;
-    }
+    const ex = document.createElement("option");
+    ex.value = "except"; ex.textContent = "Todo o som do PC, menos o Discord";
+    sel.appendChild(ex);
     apps.forEach(a => {
       const o = document.createElement("option");
       o.value = a.pid; o.dataset.name = a.name;
@@ -444,12 +737,12 @@ details ol{padding-left:18px;margin:8px 0 0}
     });
     const byPid = [...sel.options].find(o => o.value === prevPid);
     const byName = [...sel.options].find(o => o.dataset.name === prevName);
-    if (byPid) sel.value = prevPid; else if (byName) sel.value = byName.value;
+    if (byPid) sel.value = prevPid; else if (byName) sel.value = byName.value; else sel.value = "except";
   }
   $("appRefresh").onclick = () => { helperConnect(); helperSend({ type: "list" }); };
   $("appSel").onchange = () => {
     const o = $("appSel").selectedOptions[0];
-    if (o && o.dataset.name) store.set("appName", o.dataset.name);
+    store.set("appName", o && o.dataset.name ? o.dataset.name : "");
   };
 
   // Toca o PCM recebido numa faixa de áudio que vai para os amigos.
@@ -486,7 +779,31 @@ details ol{padding-left:18px;margin:8px 0 0}
     registerProcessor("pcm-player", PcmPlayer);`;
 
   let appAudio = null; // { ctx, node, track }
-  async function startAppAudio(ctx, pid){
+  // De onde vem o som: no app, da janela escolhida; senão (ou com a tela inteira), do programa da lista.
+  function audioTarget(){
+    if (inApp && window.sessaoApp.lastSource) {
+      const src = window.sessaoApp.lastSource() || {};
+      const m = /^window:(\d+):/.exec(src.id || "");
+      if (m && m[1] !== "0") return { hwnd: m[1], label: src.name };
+    }
+    const o = $("appSel").selectedOptions[0];
+    if (o && o.value && o.value !== "except") return { pid: Number(o.value), label: o.textContent };
+    // tela inteira (ou nada escolhido): todo o som do PC, menos o Discord
+    return { except: true, label: "todo o PC, menos o Discord" };
+  }
+  function helperStart(target){
+    return new Promise(res => {
+      if (!target) { res({ type: "error", message: "Você escolheu a tela inteira. Para enviar só o som de um programa, escolha uma janela ou o programa na lista." }); return; }
+      helper.waiting = res;
+      helperSend(target.except ? { type: "startExcept" } : target.hwnd ? { type: "startWindow", hwnd: Number(target.hwnd) } : { type: "start", pid: target.pid });
+      setTimeout(() => { if (helper.waiting === res) { helper.waiting = null; res({ type: "error", message: "O Ajudante de Som não respondeu." }); } }, 10000);
+    });
+  }
+  function showAudioSource(reply){
+    if (reply.type === "started") setAppStatus("Enviando o som de: " + (reply.name || "programa"), "ok");
+  }
+
+  async function startAppAudio(ctx, target){
     let node;
     const url = URL.createObjectURL(new Blob([PLAYER_CODE], { type: "application/javascript" }));
     try {
@@ -502,11 +819,8 @@ details ol{padding-left:18px;margin:8px 0 0}
     track.contentHint = "music";
     appAudio = { ctx, node, track };
 
-    const reply = await new Promise(res => {
-      helper.waiting = res;
-      helperSend({ type: "start", pid: Number(pid) });
-      setTimeout(() => { if (helper.waiting === res) { helper.waiting = null; res({ type: "error", message: "O Ajudante de Som não respondeu." }); } }, 10000);
-    });
+    const reply = await helperStart(target);
+    showAudioSource(reply);
     return { track, error: reply.type === "error" ? reply.message : "" };
   }
   function stopAppAudio(){
@@ -543,7 +857,8 @@ details ol{padding-left:18px;margin:8px 0 0}
   }
   // restaurar configurações
   (() => {
-    const a = store.get("audio", "tab"); const r = document.querySelector(`input[name=audio][value="${a}"]`); if (r) r.checked = true;
+    let a = store.get("audio", inApp ? "app" : "tab");
+    if (inApp && (a === "tab" || a === "game")) a = "app"; const r = document.querySelector(`input[name=audio][value="${a}"]`); if (r) r.checked = true;
     const q = store.get("quality", "1080-30"); if ([...$("quality").options].some(o => o.value === q)) $("quality").value = q;
     $("bitrate").value = store.get("bitrate", "5000"); $("bitrateVal").textContent = $("bitrate").value + " kbps";
     syncAudioBoxes();
@@ -601,11 +916,13 @@ details ol{padding-left:18px;margin:8px 0 0}
     });
   }
 
-  async function captureStream(appCtx){
+  const cleanAudio = { echoCancellation:false, noiseSuppression:false, autoGainControl:false, channelCount:2, sampleRate:48000 };
+  const usesDisplayAudio = mode => mode === "tab" || mode === "system" || mode === "game";
+
+  // Abre a janela do navegador para escolher a tela e devolve a imagem (e o som, nos modos que pegam o som da tela).
+  async function pickDisplay(mode){
     const [h, fps] = $("quality").value.split("-").map(Number);
-    const mode = audioMode();
-    const wantDisplayAudio = mode === "tab" || mode === "system" || mode === "game";
-    const cleanAudio = { echoCancellation:false, noiseSuppression:false, autoGainControl:false, channelCount:2, sampleRate:48000 };
+    const wantDisplayAudio = usesDisplayAudio(mode);
     const audioC = { ...cleanAudio, suppressLocalAudioPlayback:false };
     // "game": som do PC menos tudo o que toca no navegador (Discord pelo navegador fica de fora)
     if (mode === "game") audioC.restrictOwnAudio = true;
@@ -618,12 +935,11 @@ details ol{padding-left:18px;margin:8px 0 0}
     });
     const vt = display.getVideoTracks()[0];
     vt.contentHint = "detail";
-    const out = new MediaStream([vt]);
-    let audioWarn = "";
+    let at = null, audioWarn = "";
     if (wantDisplayAudio) {
-      const at = display.getAudioTracks()[0];
+      at = display.getAudioTracks()[0] || null;
       if (at) {
-        at.contentHint = "music"; out.addTrack(at);
+        at.contentHint = "music";
         if (mode === "game") {
           let ok = false;
           try { ok = at.getSettings().restrictOwnAudio === true; } catch(e){}
@@ -633,9 +949,19 @@ details ol{padding-left:18px;margin:8px 0 0}
       else audioWarn = mode === "tab"
         ? "Sem som: compartilhe uma Guia do Chrome e deixe ligado \"Compartilhar áudio da guia\"."
         : "Sem som: ligue \"Compartilhar áudio do sistema\" na janela de compartilhamento.";
-    } else if (mode === "app") {
+    }
+    return { display, vt, at, audioWarn };
+  }
+
+  async function captureStream(appCtx){
+    const mode = audioMode();
+    const { display, vt, at, audioWarn: warn } = await pickDisplay(mode);
+    const out = new MediaStream([vt]);
+    let audioWarn = warn;
+    if (at) out.addTrack(at);
+    if (mode === "app") {
       try {
-        const { track, error } = await startAppAudio(appCtx, $("appSel").value);
+        const { track, error } = await startAppAudio(appCtx, audioTarget());
         out.addTrack(track);
         if (error) audioWarn = "Sem som do programa: " + error;
       } catch (e) {
@@ -664,7 +990,17 @@ details ol{padding-left:18px;margin:8px 0 0}
 
   function showRoom(id){
     $("roomCode").textContent = id; $("codeBox").hidden = false;
-    if (isHosted) {
+    if (inApp) {
+      // no app: os amigos usam o código no próprio app; o link do site é opcional
+      const site = window.sessaoApp.siteUrl || "";
+      $("linkRow").hidden = !site;
+      if (site) $("roomLink").value = site + "?sala=" + id;
+      $("fileHint").hidden = false;
+      $("fileHint").innerHTML = site
+        ? "Quem tem o app abre <b>Vou assistir</b> e cola o código. Quem não tem pode assistir pelo link no navegador."
+        : "Seus amigos abrem o app <b>Sessão de Série</b>, clicam em <b>Vou assistir</b> e colam o código.";
+      $("shareTitle").textContent = "Código da sala — mande para os amigos";
+    } else if (isHosted) {
       $("roomLink").value = location.origin + location.pathname + "?sala=" + id;
       $("linkRow").hidden = false; $("fileHint").hidden = true;
       $("shareTitle").textContent = "Link da sala — mande para os amigos";
@@ -702,7 +1038,8 @@ details ol{padding-left:18px;margin:8px 0 0}
   }
   function renderViewers(){
     const n = viewers.size;
-    $("viewers").textContent = n ? `${n} ${n === 1 ? "amigo assistindo" : "amigos assistindo"}` : (stream ? "Esperando amigos entrarem…" : "");
+    $("viewers").textContent = n ? `${n} ${n === 1 ? "assistindo" : "assistindo"}` : (stream ? "esperando a turma" : "");
+    if (stream) setLive(true, n ? (n === 1 ? "1 assistindo" : n + " assistindo") : "");
   }
 
   function openHostPeer(){
@@ -710,12 +1047,13 @@ details ol{padding-left:18px;margin:8px 0 0}
     hostPeer = new Peer(id, { config: ICE, debug: 0 });
     hostPeer.on("open", pid => {
       hostRetry = 0; showRoom(pid);
-      if (!$("hostStatus").dataset.warn) setStatus("host", isHosted ? "Transmitindo. Mande o link para os amigos." : "Transmitindo. Mande o código e este arquivo para os amigos.", "ok");
+      if (!$("hostStatus").dataset.warn) setStatus("host", inApp ? "Transmitindo. Mande o código da sala para os amigos." : isHosted ? "Transmitindo. Mande o link para os amigos." : "Transmitindo. Mande o código e este arquivo para os amigos.", "ok");
       renderViewers();
     });
     hostPeer.on("connection", conn => {
-      conn.on("open", () => { const e = callViewer(conn.peer); if (e) e.conn = conn; });
-      conn.on("close", () => dropViewer(conn.peer));
+      conn.on("open", () => { const e = callViewer(conn.peer); if (e) e.conn = conn; social.hostSync(); });
+      conn.on("data", d => social.hostData(conn.peer, d));
+      conn.on("close", () => { dropViewer(conn.peer); social.hostLeft(conn.peer); });
     });
     hostPeer.on("disconnected", () => {
       if (!stream || !hostPeer || hostPeer.destroyed) return;
@@ -751,7 +1089,7 @@ details ol{padding-left:18px;margin:8px 0 0}
     let appCtx = null;
     if (audioMode() === "app") {
       if (!helper.ready) { setStatus("host", "Abra o AjudanteDeSom.exe antes de começar.", "bad"); helperConnect(); return; }
-      if (!$("appSel").value) { setStatus("host", "Escolha o programa na lista (abra o jogo e clique em Atualizar).", "bad"); return; }
+      if (!inApp && !$("appSel").value) { setStatus("host", "Escolha o programa na lista (abra o jogo e clique em Atualizar).", "bad"); return; }
       // criado no clique para o navegador liberar o som
       try { appCtx = new AudioContext({ sampleRate: 48000, latencyHint: "interactive" }); } catch(e) { appCtx = new AudioContext(); }
     }
@@ -765,8 +1103,12 @@ details ol{padding-left:18px;margin:8px 0 0}
       startStats(null, true);
       $("hostStatus").dataset.warn = audioWarn ? "1" : "";
       setStatus("host", audioWarn || "Abrindo a sala…", audioWarn ? "warn" : "");
+      social.reset();
+      $("roomTitle").textContent = "Sala de " + social.myName();
+      setView("session");
+      social.hostSync();
       openHostPeer();
-      $("startBtn").hidden = true; $("stopBtn").hidden = false; $("codec").disabled = true;
+      $("codec").disabled = true;
       document.querySelectorAll('input[name=audio]').forEach(r => r.disabled = true); $("appSel").disabled = true;
     } catch (e) {
       stream = null;
@@ -786,13 +1128,75 @@ details ol{padding-left:18px;margin:8px 0 0}
     if (stream) stream.getTracks().forEach(t => t.stop());
     stream = null;
     stopAppAudio();
-    video.srcObject = null; $("empty").hidden = false; stopStats(); stopMeter();
-    $("codeBox").hidden = true; $("startBtn").hidden = false; $("stopBtn").hidden = true; $("codec").disabled = false;
+    video.srcObject = null; $("empty").hidden = false; stopStats(); stopMeter(); setLive(false);
+    $("codec").disabled = false;
+    if (document.fullscreenElement) document.exitFullscreen().catch(()=>{});
+    setView("setup");
     document.querySelectorAll('input[name=audio]').forEach(r => r.disabled = false); $("appSel").disabled = false;
     $("hostStatus").dataset.warn = "";
     setStatus("host", "Transmissão encerrada.", "");
   }
   $("stopBtn").onclick = stopHost;
+
+  // Troca a tela/janela no meio da transmissão: os amigos continuam conectados e só a imagem muda.
+  function replaceOnSenders(kind, track){
+    const jobs = [];
+    viewers.forEach(v => {
+      const pc = v.call && v.call.peerConnection; if (!pc) return;
+      pc.getSenders().forEach(snd => {
+        if ((snd.track && snd.track.kind === kind) || (!snd.track && snd._kind === kind)) {
+          snd._kind = kind;
+          jobs.push(snd.replaceTrack(track).catch(() => {}));
+        }
+      });
+    });
+    return Promise.all(jobs);
+  }
+
+  $("switchBtn").onclick = async () => {
+    if (!stream) return;
+    const mode = audioMode();
+    $("switchBtn").disabled = true;
+    try {
+      const { vt: nv, at: na, audioWarn } = await pickDisplay(mode);
+      if (!stream) { nv.stop(); if (na) na.stop(); return; }
+      const ov = stream.getVideoTracks()[0];
+      await replaceOnSenders("video", nv);
+      if (ov) { ov.onended = null; stream.removeTrack(ov); ov.stop(); }
+      stream.addTrack(nv);
+      nv.onended = stopHost;
+
+      let warn = audioWarn;
+      if (usesDisplayAudio(mode)) {
+        // nesses modos o som vem junto com a tela, então troca também
+        const oa = stream.getAudioTracks()[0];
+        if (na && oa) {
+          await replaceOnSenders("audio", na);
+          stream.removeTrack(oa); oa.stop(); stream.addTrack(na);
+        } else if (na && !oa) {
+          na.stop();
+          warn = "A imagem trocou, mas para enviar o som desta tela pare e comece a transmissão de novo.";
+        } else if (!na && oa) {
+          await replaceOnSenders("audio", null);
+          stream.removeTrack(oa); oa.stop();
+        }
+        startMeter(stream, true);
+      } else if (na) na.stop();
+      if (mode === "app" && inApp) {
+        const reply = await helperStart(audioTarget());
+        showAudioSource(reply);
+        if (reply.type === "error") warn = "A imagem trocou, mas o som continua do programa anterior: " + reply.message;
+      }
+
+      video.srcObject = stream;
+      viewers.forEach(v => applyEncoding(v.call));
+      $("hostStatus").dataset.warn = warn ? "1" : "";
+      setStatus("host", warn || "Tela trocada. Seus amigos continuam assistindo.", warn ? "warn" : "ok");
+    } catch (e) {
+      setStatus("host", e.name === "NotAllowedError" ? "Troca cancelada. A transmissão continua como estava." : "Não consegui trocar: " + e.message, "warn");
+    }
+    $("switchBtn").disabled = false;
+  };
 
   $("newCodeBtn").onclick = () => {
     store.set("sala", newRoomId());
@@ -807,7 +1211,7 @@ details ol{padding-left:18px;margin:8px 0 0}
     navigator.clipboard.writeText(text).then(() => { btn.textContent = "Copiado"; setTimeout(() => btn.textContent = label, 1500); })
       .catch(() => { if (fallbackEl.select) fallbackEl.select(); else { const r = document.createRange(); r.selectNodeContents(fallbackEl); getSelection().removeAllRanges(); getSelection().addRange(r); } });
   }
-  $("copyBtn").onclick = () => copyText($("roomCode").textContent, $("copyBtn"), "Copiar código", $("roomCode"));
+  $("copyBtn").onclick = () => copyText($("roomCode").textContent, $("copyBtn"), "Copiar", $("roomCode"));
   $("copyLinkBtn").onclick = () => copyText($("roomLink").value, $("copyLinkBtn"), "Copiar link", $("roomLink"));
 
   // ================= ASSISTIR =================
@@ -828,7 +1232,9 @@ details ol{padding-left:18px;margin:8px 0 0}
     const max = everConnected ? 30 : 3;
     if (attempts > max) {
       setStatus("view", everConnected ? "Não consegui reconectar. Confira se seu amigo ainda está transmitindo." : "Sala não encontrada. Confira o código e se seu amigo já começou a transmitir.", "bad");
-      $("joinBtn").disabled = false; $("joinBtn").hidden = false; $("leaveBtn").hidden = true;
+      $("joinBtn").disabled = false;
+      if (!everConnected) { setView("home"); }
+      else setEmpty("A conexão caiu", "Não consegui reconectar. Confira se seu amigo ainda está transmitindo.", false);
       return;
     }
     const wait = everConnected ? 3000 : 2500;
@@ -846,13 +1252,19 @@ details ol{padding-left:18px;margin:8px 0 0}
       if (peer !== viewPeer) return;
       const conn = viewConn = peer.connect(wanted, { reliable: true });
       foundTimer = setTimeout(() => { if (peer === viewPeer && !viewCall) scheduleRetry("A sala não respondeu."); }, 12000);
-      conn.on("open", () => setStatus("view", "Conectado. Recebendo o vídeo…", ""));
+      conn.on("open", () => {
+        setStatus("view", "Conectado. Recebendo o vídeo…", "");
+        try { conn.send({ type: "hello", name: social.myName() }); } catch(e){}
+      });
       conn.on("data", d => {
         if (d && d.type === "end") {
-          ended = true; cleanupView(); stopStats(); stopMeter();
+          ended = true; cleanupView(); stopStats(); stopMeter(); setLive(false);
+          video.srcObject = null; $("empty").hidden = false;
+          setEmpty("A sessão acabou", "Seu amigo encerrou a transmissão. Obrigado por assistir junto.", false);
           setStatus("view", "Seu amigo encerrou a transmissão.", "bad");
-          $("joinBtn").hidden = false; $("joinBtn").disabled = false; $("leaveBtn").hidden = true;
-        }
+          $("joinBtn").disabled = false;
+          social.system("A transmissão foi encerrada.");
+        } else social.viewData(d);
       });
       conn.on("close", () => { if (peer === viewPeer && !ended) scheduleRetry("A conexão caiu."); });
     });
@@ -882,6 +1294,7 @@ details ol{padding-left:18px;margin:8px 0 0}
         video.srcObject = s; $("empty").hidden = true;
         video.muted = false; video.volume = Number($("vol").value);
         startMeter(s, false);
+        setLive(true);
         s.onaddtrack = () => startMeter(s, false);
         video.play().then(() => { $("unmuteBtn").hidden = true; })
           .catch(() => { video.muted = true; video.play().catch(()=>{}); $("unmuteBtn").hidden = false; });
@@ -908,27 +1321,296 @@ details ol{padding-left:18px;margin:8px 0 0}
     const code = $("joinCode").value.trim().toLowerCase().replace(/.*[?&]sala=/, "").replace(/[^a-z0-9-]/g, "");
     if (!code) { setStatus("view", "Cole o código da sala.", "warn"); return; }
     if (!window.Peer) { setStatus("view", "Não carregou a biblioteca de conexão. Verifique a internet e recarregue.", "bad"); return; }
+    if (!social.myName(true)) { social.askName(); setStatus("view", "Escreva seu nome antes de entrar.", "warn"); return; }
     $("joinCode").value = code;
     unlockAudio(); video.muted = false; // o clique em "Entrar" libera o som no navegador
     wanted = code; ended = false; everConnected = false; attempts = 0;
-    $("joinBtn").disabled = true; $("joinBtn").hidden = true; $("leaveBtn").hidden = false;
+    $("joinBtn").disabled = true;
+    setTab(false); social.reset();
+    $("viewTitle").textContent = "Sala " + code;
+    video.srcObject = null; $("empty").hidden = false;
+    setEmpty("Entrando na sala", "Procurando " + code + "…", true);
+    setView("session");
     connectView();
   }
   $("joinBtn").onclick = join;
   $("joinCode").addEventListener("keydown", e => { if (e.key === "Enter") join(); });
   $("leaveBtn").onclick = () => {
-    wanted = null; ended = true; cleanupView(); stopStats(); stopMeter();
+    wanted = null; ended = true; cleanupView(); stopStats(); stopMeter(); setLive(false);
     video.srcObject = null; $("empty").hidden = false;
-    $("joinBtn").hidden = false; $("joinBtn").disabled = false; $("leaveBtn").hidden = true;
-    setStatus("view", "Você saiu da sala.", "");
+    $("joinBtn").disabled = false;
+    if (document.fullscreenElement) document.exitFullscreen().catch(()=>{});
+    setStatus("view", "Você saiu da sala. Até a próxima!", "");
+    setView("home");
   };
 
   $("unmuteBtn").onclick = () => { unlockAudio(); if (video.srcObject) startMeter(video.srcObject, false); video.muted = false; video.play().catch(()=>{}); $("unmuteBtn").hidden = true; };
-  $("fsBtn").onclick = () => {
+  // Tela cheia: o botão só aparece quando o mouse mexe em cima do vídeo. Dois cliques no vídeo entram e saem.
+  function toggleFullscreen(){
     const el = $("screen");
     if (document.fullscreenElement) document.exitFullscreen().catch(()=>{});
-    else (el.requestFullscreen ? el.requestFullscreen() : video.webkitEnterFullscreen?.())?.catch?.(()=>{});
+    else if (el.requestFullscreen) el.requestFullscreen().catch(()=>{});
+    else if (video.webkitEnterFullscreen) video.webkitEnterFullscreen();
+  }
+  $("fsBtn").onclick = toggleFullscreen;
+  document.addEventListener("fullscreenchange", () => {
+    $("fsBtn").textContent = document.fullscreenElement ? "Sair da tela cheia" : "Tela cheia";
+  });
+  video.addEventListener("dblclick", toggleFullscreen);
+  let idleTimer = null;
+  function wake(){
+    $("screen").classList.remove("idle");
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => $("screen").classList.add("idle"), 2500);
+  }
+  ["mousemove", "touchstart"].forEach(ev => $("screen").addEventListener(ev, wake, { passive: true }));
+  $("screen").addEventListener("mouseleave", () => { clearTimeout(idleTimer); $("screen").classList.add("idle"); });
+  $("screen").classList.add("idle");
+
+  // ================= PESSOAS, CONVERSA E REAÇÕES =================
+  function setEmpty(title, text, spin){
+    $("emptyTitle").textContent = title; $("emptyText").textContent = text; $("emptySpin").hidden = !spin;
+  }
+
+  const social = (() => {
+    const PALETTE = ["#ff9b74", "#7cc4ff", "#b69cff", "#6fd6a8", "#ffc861", "#ff7aa8", "#5fd3e6"];
+    const EMOJIS = ["😂", "😮", "😍", "👏", "🔥", "🍿"];
+    const names = new Map();   // transmissor: id do amigo -> nome
+    let people = [];           // [{ id, name, host }]
+    let lastReact = 0;
+
+    const clean = (t, n) => String(t == null ? "" : t).replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim().slice(0, n);
+    function myName(strict){ const n = clean(store.get("nome", ""), 24); return strict ? n : (n || "Convidado"); }
+    function colorOf(name){ let h = 0; for (const ch of String(name)) h = (h * 31 + ch.codePointAt(0)) >>> 0; return PALETTE[h % PALETTE.length]; }
+    function avatar(name, big){
+      const s = document.createElement("span");
+      s.className = "av" + (big ? " lg" : ""); s.style.setProperty("--c", colorOf(name));
+      s.textContent = ([...clean(name, 24)][0] || "?").toUpperCase(); s.title = name;
+      return s;
+    }
+    function myId(){ return role === "host" ? "host" : (viewPeer && viewPeer.id) || ""; }
+
+    // ----- nome -----
+    function paintName(){
+      const n = myName(true);
+      $("helloName").textContent = n || "pessoa";
+      $("meName").textContent = n || "sem nome";
+      const a = avatar(n || "?"); $("meAv").replaceWith(a); a.id = "meAv";
+    }
+    function askName(){ const i = $("nameInput"); i.focus(); i.placeholder = "Escreva seu nome aqui"; i.scrollIntoView({ block: "center", behavior: "smooth" }); }
+    $("nameInput").value = myName(true);
+    $("nameInput").addEventListener("input", () => { store.set("nome", clean($("nameInput").value, 24)); paintName(); });
+    $("meChip").onclick = () => { if ($("app").dataset.view !== "session") askName(); };
+    paintName();
+
+    // ----- quem está aqui -----
+    function renderPeople(){
+      const list = $("peopleList"); list.innerHTML = "";
+      const me = myId();
+      people.forEach(p => {
+        const row = document.createElement("div"); row.className = "person";
+        const nm = document.createElement("span"); nm.textContent = p.name;
+        const tag = document.createElement("span"); tag.className = "tag";
+        tag.textContent = p.host ? (p.id === me ? "você · transmitindo" : "transmitindo") : (p.id === me ? "você" : "");
+        row.append(avatar(p.name, true), nm, tag); list.appendChild(row);
+      });
+      const faces = $("topFaces"); faces.innerHTML = "";
+      people.slice(0, 5).forEach(p => faces.appendChild(avatar(p.name)));
+      if (people.length > 5) { const m = document.createElement("span"); m.className = "more"; m.textContent = "+" + (people.length - 5); faces.appendChild(m); }
+      const host = people.find(p => p.host);
+      if (role !== "host" && host) $("viewTitle").textContent = "Sala de " + host.name;
+      const watching = people.filter(p => !p.host).length;
+      if (role !== "host") $("viewers").textContent = watching ? watching + " assistindo" : "";
+    }
+
+    // ----- conversa -----
+    const sideHidden = () => $("session").classList.contains("noside") || !!document.fullscreenElement || window.innerWidth <= 980;
+    function addChat(m){
+      const list = $("chatList"); const empty = $("chatEmpty"); if (empty) empty.remove();
+      const row = document.createElement("div");
+      if (m.sys) { row.className = "cm sys"; row.textContent = m.text; }
+      else {
+        row.className = "cm";
+        const body = document.createElement("div"); body.className = "body";
+        const who = document.createElement("div"); who.className = "who"; who.style.color = colorOf(m.from); who.textContent = m.from;
+        const tx = document.createElement("div"); tx.className = "text"; tx.textContent = m.text;
+        body.append(who, tx); row.append(avatar(m.from), body);
+      }
+      const atBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 60;
+      list.appendChild(row);
+      while (list.children.length > 200) list.firstChild.remove();
+      if (atBottom) list.scrollTop = list.scrollHeight;
+      if (!m.sys && sideHidden()) floatMsg(m);
+    }
+    function floatMsg(m){
+      const box = $("chatFloat");
+      const el = document.createElement("div"); el.className = "msg";
+      const b = document.createElement("b"); b.style.color = colorOf(m.from); b.textContent = m.from + " ";
+      el.append(b, document.createTextNode(m.text));
+      box.appendChild(el);
+      while (box.children.length > 4) box.firstChild.remove();
+      setTimeout(() => el.remove(), 7000);
+    }
+    function system(text){ addChat({ sys: true, text }); }
+
+    // ----- reações -----
+    function pop(emoji, from){
+      const layer = $("floaters");
+      const f = document.createElement("div"); f.className = "floater";
+      f.style.left = (8 + Math.random() * 84) + "%";
+      const e = document.createElement("span"); e.textContent = emoji;
+      const n = document.createElement("small"); n.textContent = from;
+      f.append(e, n); layer.appendChild(f);
+      while (layer.children.length > 30) layer.firstChild.remove();
+      setTimeout(() => f.remove(), 3400);
+    }
+    EMOJIS.forEach(em => {
+      const b = document.createElement("button"); b.type = "button"; b.textContent = em; b.title = "Reagir com " + em;
+      b.onclick = () => react(em);
+      $("reactBar").appendChild(b);
+    });
+
+    // ----- transmissor: recebe dos amigos e repassa para todos -----
+    function broadcast(m){ viewers.forEach(v => { try { if (v.conn && v.conn.open) v.conn.send(m); } catch(e){} }); }
+    function hostSync(){
+      if (role !== "host") return;
+      people = [{ id: "host", name: myName(), host: true }]
+        .concat([...viewers.keys()].map(id => ({ id, name: names.get(id) || "Chegando…" })));
+      broadcast({ type: "people", list: people });
+      renderPeople();
+    }
+    function hostData(id, d){
+      if (!d || typeof d !== "object") return;
+      if (d.type === "hello") {
+        const first = !names.has(id);
+        names.set(id, clean(d.name, 24) || "Convidado");
+        hostSync();
+        if (first) { const m = { type: "chat", sys: true, text: names.get(id) + " entrou na sala" }; broadcast(m); addChat(m); }
+      } else if (d.type === "chat") {
+        const text = clean(d.text, 300); if (!text) return;
+        const m = { type: "chat", from: names.get(id) || "Convidado", text };
+        broadcast(m); addChat(m);
+      } else if (d.type === "react") {
+        if (!EMOJIS.includes(d.emoji)) return;
+        const m = { type: "react", from: names.get(id) || "Convidado", emoji: d.emoji };
+        broadcast(m); pop(m.emoji, m.from);
+      }
+    }
+    function hostLeft(id){
+      if (viewers.has(id)) return; // voltou na hora (reconexão)
+      const name = names.get(id); names.delete(id);
+      if (name) { const m = { type: "chat", sys: true, text: name + " saiu" }; broadcast(m); addChat(m); }
+      hostSync();
+    }
+
+    // ----- amigo: recebe do transmissor -----
+    function viewData(d){
+      if (!d || typeof d !== "object") return;
+      if (d.type === "people" && Array.isArray(d.list)) {
+        people = d.list.slice(0, 50).map(p => ({ id: String(p.id || ""), name: clean(p.name, 24) || "Convidado", host: !!p.host }));
+        renderPeople();
+      } else if (d.type === "chat") {
+        if (d.sys) system(clean(d.text, 120)); else addChat({ from: clean(d.from, 24) || "Convidado", text: clean(d.text, 300) });
+      } else if (d.type === "react" && EMOJIS.includes(d.emoji)) pop(d.emoji, clean(d.from, 24));
+    }
+
+    // ----- enviar -----
+    function sendChat(text){
+      text = clean(text, 300); if (!text) return false;
+      if (role === "host") { if (!stream) return false; const m = { type: "chat", from: myName(), text }; broadcast(m); addChat(m); return true; }
+      if (viewConn && viewConn.open) { try { viewConn.send({ type: "chat", text }); return true; } catch(e){} }
+      system("Ainda conectando. Tente de novo em instantes.");
+      return false;
+    }
+    function react(emoji){
+      const now = Date.now(); if (now - lastReact < 350) return; lastReact = now;
+      if (role === "host") { if (!stream) return; const m = { type: "react", from: myName(), emoji }; broadcast(m); pop(emoji, m.from); return; }
+      if (viewConn && viewConn.open) { try { viewConn.send({ type: "react", emoji }); } catch(e){} }
+    }
+    $("chatForm").addEventListener("submit", e => {
+      e.preventDefault();
+      if (sendChat($("chatInput").value)) $("chatInput").value = "";
+    });
+
+    function reset(){
+      names.clear(); people = [];
+      $("chatList").innerHTML = '<div class="empty-chat" id="chatEmpty">Diga oi. As mensagens aparecem aqui e em cima do vídeo quando a lateral estiver fechada.</div>';
+      $("chatFloat").innerHTML = ""; $("floaters").innerHTML = "";
+      renderPeople();
+    }
+
+    return { myName, askName, hostSync, hostData, hostLeft, viewData, system, reset };
+  })();
+
+  // ================= QUALIDADE SIMPLIFICADA =================
+  const PRESETS = {
+    serie: { q: "1080-30", b: 5000, c: ["VP9", "auto"] },
+    jogo:  { q: "1080-60", b: 8000, c: ["H264", "auto"] },
+    leve:  { q: "720-30",  b: 2500, c: ["VP9", "auto"] }
   };
+  function markPreset(name){
+    document.querySelectorAll(".preset").forEach(b => b.setAttribute("aria-pressed", b.dataset.preset === name));
+  }
+  function applyPreset(name){
+    const p = PRESETS[name]; if (!p) return;
+    $("quality").value = p.q; $("quality").onchange && $("quality").onchange();
+    $("bitrate").value = p.b; $("bitrate").oninput && $("bitrate").oninput();
+    const opts = [...$("codec").options].map(o => o.value);
+    $("codec").value = p.c.find(c => opts.includes(c)) || opts[0];
+    $("codec").onchange && $("codec").onchange();
+    store.set("preset", name); markPreset(name);
+  }
+  document.querySelectorAll(".preset").forEach(b => b.onclick = () => applyPreset(b.dataset.preset));
+  ["quality", "bitrate", "codec"].forEach(id => ["input", "change"].forEach(ev => $(id).addEventListener(ev, e => {
+    if (e.isTrusted) { store.set("preset", ""); markPreset(null); }
+  })));
+  { const p = store.get("preset", "serie"); if (PRESETS[p]) applyPreset(p); else markPreset(null); }
+
+  // ================= NAVEGAÇÃO E CONTROLES DA SESSÃO =================
+  $("goHost").onclick = () => {
+    if (!social.myName(true)) { social.askName(); return; }
+    setTab(true); setView("setup"); syncAudioBoxes();
+  };
+  $("backHome").onclick = () => setView("home");
+  // opções de som "avançadas" escolhidas antes: abre os ajustes para a pessoa ver
+  if (["game", "device"].includes(audioMode())) $("advanced").open = true;
+
+  $("statsBtn").onclick = () => { $("statsBox").hidden = !$("statsBox").hidden; };
+  function setSide(show){
+    $("session").classList.toggle("noside", !show);
+    $("sideBtnText").textContent = show ? "Esconder lateral" : "Mostrar lateral";
+    store.set("lateral", show ? "1" : "0");
+  }
+  $("sideBtn").onclick = () => setSide($("session").classList.contains("noside"));
+  setSide(store.get("lateral", "1") === "1");
+
+  setView("home");
+
+  // ================= ATUALIZAÇÃO AUTOMÁTICA (só no app) =================
+  if (inApp && window.sessaoApp.onUpdate) {
+    let dismissed = false;
+    const paint = st => {
+      if (!st || st.state === "idle") { $("updToast").hidden = true; return; }
+      if (dismissed && st.state !== "ready") return;
+      $("updToast").hidden = false;
+      if (st.state === "downloading") {
+        $("updTitle").textContent = "Baixando a versão " + (st.version || "nova");
+        $("updText").textContent = (st.percent || 0) + "%. Pode continuar usando normalmente.";
+        $("updBar").hidden = false; $("updFill").style.width = (st.percent || 0) + "%"; $("updBtn").hidden = true;
+      } else if (st.state === "ready") {
+        dismissed = false;
+        $("updTitle").textContent = "Versão " + (st.version || "nova") + " pronta";
+        $("updText").textContent = stream || (viewCall && !ended)
+          ? "Ela entra quando você fechar o app, para não interromper a sessão."
+          : "Reinicie para usar agora, ou ela entra quando você fechar o app.";
+        $("updBar").hidden = true; $("updBtn").hidden = false;
+      }
+    };
+    $("updBtn").onclick = () => { if (stream) stopHost(); $("updBtn").disabled = true; $("updText").textContent = "Reiniciando…"; window.sessaoApp.installUpdate(); };
+    $("updClose").onclick = () => { dismissed = true; $("updToast").hidden = true; };
+    window.sessaoApp.onUpdate(paint);
+    paint(window.sessaoApp.updateState());
+  }
 
   // ---------- link direto: ?sala=... ----------
   (() => {
@@ -936,8 +1618,8 @@ details ol{padding-left:18px;margin:8px 0 0}
     if (sala) {
       setTab(false);
       $("joinCode").value = sala;
-      setStatus("view", "Clique em \"Entrar e assistir\" para começar.", "");
-      $("empty").querySelector("div").innerHTML = "<strong>Sala " + sala.replace(/[^a-z0-9-]/gi, "") + "</strong>Clique em \"Entrar e assistir\" para começar.";
+      setStatus("view", "Clique em Entrar para assistir.", "");
+      setStatus("view", "Clique em Entrar para assistir.", "");
     }
   })();
 
