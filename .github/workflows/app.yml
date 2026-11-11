@@ -1,6 +1,6 @@
 # Monta o instalador do app no Windows do GitHub e publica a versão.
 # Dispara quando o app muda na branch main. Se a versão de app/package.json
-# ainda não foi publicada, monta e publica; se já foi, não faz nada.
+# ainda não foi publicada (ou ficou incompleta), monta e publica; se já está completa, não faz nada.
 name: Publicar app
 
 on:
@@ -12,6 +12,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: publicar-app
+  cancel-in-progress: false
+
 jobs:
   windows:
     runs-on: windows-latest
@@ -19,22 +23,26 @@ jobs:
       run:
         working-directory: app
         shell: bash
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v4
 
       - name: Ver se esta versão já foi publicada
         id: ver
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           V=$(node -p "require('./package.json').version")
           echo "version=$V" >> "$GITHUB_OUTPUT"
-          if gh release view "v$V" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            echo "A versão $V já existe. Nada a fazer."
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "skip=false" >> "$GITHUB_OUTPUT"
+          if gh release view "v$V" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name' > assets.txt 2>/dev/null; then
+            if grep -qx "latest.yml" assets.txt; then
+              echo "A versão $V já está publicada e completa. Nada a fazer."
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            echo "A versão $V ficou incompleta. Apagando para publicar de novo."
+            gh release delete "v$V" --repo "$GITHUB_REPOSITORY" --cleanup-tag --yes
           fi
+          echo "skip=false" >> "$GITHUB_OUTPUT"
 
       - uses: actions/setup-node@v4
         if: steps.ver.outputs.skip == 'false'
@@ -46,8 +54,22 @@ jobs:
       - run: npm ci
         if: steps.ver.outputs.skip == 'false'
 
-      - name: Montar e publicar
+      # Cria a versão como rascunho antes de enviar os arquivos, para os envios não brigarem entre si.
+      - name: Criar a versão (rascunho)
         if: steps.ver.outputs.skip == 'false'
-        run: npx electron-builder --win nsis --x64 --publish always
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          V=${{ steps.ver.outputs.version }}
+          gh release create "v$V" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --draft \
+            --title "Sessão de Série $V" \
+            --notes "Baixe e abra o **SessaoDeSerie-Instalador.exe**. Quem já tem o app recebe esta versão sozinho."
+
+      - name: Montar e enviar os arquivos
+        if: steps.ver.outputs.skip == 'false'
+        run: npx electron-builder --win nsis --x64 --publish always -c.publish.provider=github -c.publish.owner=Orealgabs -c.publish.repo=cineminha -c.publish.releaseType=draft
+
+      - name: Publicar a versão
+        if: steps.ver.outputs.skip == 'false'
+        run: |
+          V=${{ steps.ver.outputs.version }}
+          gh release view "v$V" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name'
+          gh release edit "v$V" --repo "$GITHUB_REPOSITORY" --draft=false --latest
