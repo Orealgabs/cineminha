@@ -1,10 +1,12 @@
 # Monta o instalador do app no Windows do GitHub e publica a versão.
-# Dispara quando chega uma tag "v1.2.3" (a versão do app/package.json).
+# Dispara quando o app muda na branch main. Se a versão de app/package.json
+# ainda não foi publicada, monta e publica; se já foi, não faz nada.
 name: Publicar app
 
 on:
   push:
-    tags: ["v*"]
+    branches: [main]
+    paths: ["app/**", ".github/workflows/app.yml"]
   workflow_dispatch:
 
 permissions:
@@ -16,15 +18,36 @@ jobs:
     defaults:
       run:
         working-directory: app
+        shell: bash
     steps:
       - uses: actions/checkout@v4
+
+      - name: Ver se esta versão já foi publicada
+        id: ver
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          V=$(node -p "require('./package.json').version")
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+          if gh release view "v$V" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "A versão $V já existe. Nada a fazer."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - uses: actions/setup-node@v4
+        if: steps.ver.outputs.skip == 'false'
         with:
           node-version: 22
           cache: npm
           cache-dependency-path: app/package-lock.json
+
       - run: npm ci
+        if: steps.ver.outputs.skip == 'false'
+
       - name: Montar e publicar
+        if: steps.ver.outputs.skip == 'false'
         run: npx electron-builder --win nsis --x64 --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
