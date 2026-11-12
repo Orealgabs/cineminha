@@ -905,10 +905,16 @@ details p{margin:8px 0 0}
       const p = s.getParameters();
       if (!p.encodings || !p.encodings.length) p.encodings = [{}];
       if (s.track.kind === "video") {
+        // A tela inteira costuma vir na resolução do monitor (1440p, 4K). Reduz para a qualidade escolhida,
+        // senão o PC e a internet não dão conta e a imagem trava para quem assiste.
+        const targetH = Number($("quality").value.split("-")[0]);
+        const st = s.track.getSettings ? s.track.getSettings() : {};
+        const scale = st.height && st.height > targetH ? st.height / targetH : 1;
         p.encodings[0].maxBitrate = Number($("bitrate").value) * 1000;
         p.encodings[0].maxFramerate = fps;
-        p.encodings[0].scaleResolutionDownBy = 1;
-        p.degradationPreference = "maintain-resolution";
+        p.encodings[0].scaleResolutionDownBy = Math.round(scale * 100) / 100;
+        // sob aperto, baixa um pouco a nitidez em vez de congelar a imagem
+        p.degradationPreference = "balanced";
       } else {
         p.encodings[0].maxBitrate = 256000;
       }
@@ -927,14 +933,20 @@ details p{margin:8px 0 0}
     // "game": som do PC menos tudo o que toca no navegador (Discord pelo navegador fica de fora)
     if (mode === "game") audioC.restrictOwnAudio = true;
     const display = await navigator.mediaDevices.getDisplayMedia({
-      video: { height: { ideal: h }, frameRate: { ideal: fps, max: fps } },
+      video: { height: { ideal: h, max: h }, width: { max: Math.round(h * 16 / 9) }, frameRate: { ideal: fps, max: fps } },
       audio: wantDisplayAudio ? audioC : false,
       preferCurrentTab: false, selfBrowserSurface: "exclude", surfaceSwitching: "include",
       systemAudio: mode === "system" || mode === "game" ? "include" : "exclude",
       monitorTypeSurfaces: mode === "tab" ? "exclude" : "include"
     });
     const vt = display.getVideoTracks()[0];
-    vt.contentHint = "detail";
+    // série e jogo são imagem em movimento: prioriza fluidez
+    vt.contentHint = "motion";
+    // garante o limite de resolução também quando a captura ignora o pedido acima (tela inteira)
+    try {
+      const st = vt.getSettings();
+      if (st.height > h) await vt.applyConstraints({ height: { max: h }, width: { max: Math.round(h * 16 / 9) }, frameRate: { max: fps } });
+    } catch (e) {}
     let at = null, audioWarn = "";
     if (wantDisplayAudio) {
       at = display.getAudioTracks()[0] || null;
@@ -1374,7 +1386,7 @@ details p{margin:8px 0 0}
 
   const social = (() => {
     const PALETTE = ["#ff9b74", "#7cc4ff", "#b69cff", "#6fd6a8", "#ffc861", "#ff7aa8", "#5fd3e6"];
-    const EMOJIS = ["😂", "😮", "😍", "👏", "🔥", "🍿"];
+    const EMOJIS = ["😂", "😮", "😍", "👏", "🔥", "🍿", "😠", "🖕"];
     const names = new Map();   // transmissor: id do amigo -> nome
     let people = [];           // [{ id, name, host }]
     let lastReact = 0;
