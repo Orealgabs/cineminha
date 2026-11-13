@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Sessão de Série</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Creepster&family=Instrument+Serif:ital@0;1&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
 <style>
 /* Layout: "sala de casa à noite". A tela inicial pergunta só uma coisa (começar ou entrar).
    Na sessão, o vídeo é o palco e a lateral mostra quem está junto: conversa, pessoas e o código da sala.
@@ -245,6 +245,117 @@ details p{margin:8px 0 0}
 .chatform .field{flex:1;min-width:0;border-radius:999px;padding:10px 14px}
 .chatform button{flex:none;width:42px;height:42px;border-radius:50%;border:0;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center}
 .chatform button svg{width:18px;height:18px}
+/* ================= MODO TERROR ================= */
+/* Liga sozinho nas sextas-feiras 13 e no Halloween; dá para ligar ou desligar no botão do topo. */
+:root[data-clima="terror"]{
+  --bg:#0b090d; --bg-2:#110d13;
+  --surface:#17121a; --surface-2:#1f1823; --surface-3:#2a2030;
+  --line:rgba(190,255,200,.07); --line-2:rgba(190,255,200,.14);
+  --fg:#f0eaf3; --muted:#a99db2; --faint:#6e6377;
+  --accent:#ff8a2a;        /* abóbora acesa */
+  --accent-2:#ffd36b;
+  --accent-ink:#2a1100;
+  --ecto:#8dffa6;          /* brilho de fantasma */
+}
+:root[data-clima="terror"] body{
+  background-image:
+    radial-gradient(130px 130px at calc(93% - 42px) 138px, rgba(246,240,214,.9), rgba(246,240,214,.25) 55%, transparent 72%),
+    radial-gradient(520px 360px at calc(93% - 42px) 138px, rgba(246,240,214,.08), transparent 70%),
+    radial-gradient(900px 500px at 50% 115%, rgba(141,255,166,.09), transparent 70%),
+    radial-gradient(700px 500px at -5% 105%, rgba(255,138,42,.10), transparent 70%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+/* crateras da lua */
+.fx{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;display:none}
+:root[data-clima="terror"] .fx{display:block}
+.app{position:relative;z-index:1}
+.fx .moon{position:absolute;top:96px;right:7%;width:84px;height:84px;border-radius:50%;
+  background:radial-gradient(circle at 34% 38%,rgba(120,110,90,.22) 0 9px,transparent 10px),radial-gradient(circle at 62% 62%,rgba(120,110,90,.18) 0 13px,transparent 14px),radial-gradient(circle at 66% 30%,rgba(120,110,90,.15) 0 6px,transparent 7px)}
+/* névoa andando */
+.fx .fog{position:absolute;left:-50%;width:200%;height:46vh;bottom:-12vh;opacity:.55;filter:blur(30px);
+  background:radial-gradient(40% 50% at 20% 60%,rgba(200,220,210,.10),transparent 70%),radial-gradient(35% 45% at 55% 55%,rgba(200,220,210,.08),transparent 70%),radial-gradient(40% 50% at 85% 65%,rgba(200,220,210,.10),transparent 70%)}
+.fx .fog.b{bottom:-20vh;opacity:.4;height:38vh}
+@media (prefers-reduced-motion:no-preference){
+  .fx .fog{animation:drift 70s linear infinite}
+  .fx .fog.b{animation-duration:110s;animation-direction:reverse}
+}
+@keyframes drift{to{transform:translateX(25%)}}
+/* morcegos voando de vez em quando */
+.fx .bat{position:absolute;top:0;left:-60px;width:34px;color:#05040a;opacity:.9}
+.fx .bat svg{display:block;width:100%}
+@media (prefers-reduced-motion:no-preference){
+  .fx .bat{animation:fly 26s linear infinite}
+  .fx .bat svg{animation:flap .28s ease-in-out infinite alternate;transform-origin:50% 40%}
+  .fx .bat.b2{animation-duration:34s;animation-delay:-14s;width:24px}
+  .fx .bat.b3{animation-duration:41s;animation-delay:-27s;width:28px}
+}
+@media (prefers-reduced-motion:reduce){.fx .bat{display:none}}
+@keyframes fly{0%{transform:translate(0,120px)}25%{transform:translate(28vw,60px)}50%{transform:translate(55vw,140px)}75%{transform:translate(80vw,50px)}100%{transform:translate(calc(100vw + 120px),100px)}}
+@keyframes flap{from{transform:scaleY(1)}to{transform:scaleY(.45)}}
+/* teia no canto */
+.fx .web{position:absolute;top:0;left:0;width:190px;opacity:.28;color:#d8d2de}
+.fx .web.r{left:auto;right:0;bottom:0;top:auto;transform:rotate(180deg);width:150px;opacity:.18}
+
+/* letreiro e textos */
+:root[data-clima="terror"] .hello{font-family:"Creepster","Instrument Serif",Georgia,serif;letter-spacing:.02em;font-size:clamp(46px,6.8vw,84px);line-height:1}
+:root[data-clima="terror"] .hello em{font-style:normal;color:var(--accent);text-shadow:0 0 18px rgba(255,138,42,.55)}
+@media (prefers-reduced-motion:no-preference){
+  :root[data-clima="terror"] .hello em{animation:candle 4.5s infinite}
+  :root[data-clima="terror"] .btn:not(.soft):not(.danger){animation:candleglow 5s infinite}
+}
+/* vela tremendo: variação lenta de brilho, sem piscar forte */
+@keyframes candle{0%,100%{text-shadow:0 0 18px rgba(255,138,42,.55)}22%{text-shadow:0 0 10px rgba(255,138,42,.3)}24%{text-shadow:0 0 22px rgba(255,160,60,.6)}61%{text-shadow:0 0 14px rgba(255,138,42,.4)}}
+@keyframes candleglow{0%,100%{box-shadow:0 1px 0 rgba(255,255,255,.35) inset,0 12px 30px -12px rgba(255,138,42,.95)}30%{box-shadow:0 1px 0 rgba(255,255,255,.35) inset,0 12px 22px -14px rgba(255,138,42,.55)}33%{box-shadow:0 1px 0 rgba(255,255,255,.35) inset,0 14px 34px -10px rgba(255,170,70,1)}}
+:root[data-clima="terror"] .btn:not(.soft):not(.danger){background:linear-gradient(180deg,#ffb15c,var(--accent))}
+:root[data-clima="terror"] .ticket{background:linear-gradient(135deg,#ffb15c,var(--accent))}
+:root[data-clima="terror"] .choice{background:linear-gradient(180deg,rgba(31,24,35,.92),rgba(17,13,19,.92));backdrop-filter:blur(2px)}
+:root[data-clima="terror"] .screen.live{box-shadow:0 0 0 1px rgba(141,255,166,.25),0 0 90px -30px rgba(141,255,166,.35),0 40px 90px -40px rgba(0,0,0,.9)}
+
+/* mascote: o fantasminha Penumbra */
+.mascot{display:none}
+:root[data-clima="terror"] .mascot{display:block}
+.hero{display:flex;align-items:flex-end;justify-content:space-between;gap:20px}
+.hero .mascot{width:clamp(96px,14vw,150px);flex:none;filter:drop-shadow(0 0 30px rgba(141,255,166,.25))}
+@media (prefers-reduced-motion:no-preference){.mascot.float{animation:hover 4s ease-in-out infinite}}
+@keyframes hover{50%{transform:translateY(-10px) rotate(-2deg)}}
+@media (max-width:620px){.hero .mascot{width:84px}}
+.empty .mascot{width:92px;margin:0 auto 14px;opacity:.95}
+
+/* botão do modo terror no topo */
+.clima{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);color:var(--muted);font-size:13px;font-weight:600}
+.clima:hover{color:var(--fg);border-color:var(--line-2)}
+.clima[aria-pressed="true"]{color:var(--accent);border-color:rgba(255,138,42,.45);background:rgba(255,138,42,.08)}
+@media (max-width:620px){.clima .lbl{display:none}}
+
+/* ================= SUSTOS ================= */
+.reactbar .scare{width:auto;padding:0 12px;gap:6px;font-size:14px;font-weight:700;border-color:rgba(141,255,166,.35);background:rgba(141,255,166,.08);display:flex;align-items:center;position:relative;overflow:hidden}
+.reactbar .scare .cd{position:absolute;inset:0;background:rgba(12,9,13,.55);transform-origin:left;transform:scaleX(0)}
+.reactbar .scare:disabled{cursor:wait;opacity:1}
+.scaremenu{position:absolute;left:50%;bottom:74px;transform:translateX(-50%);z-index:5;width:min(440px,calc(100% - 24px));
+  background:rgba(17,13,19,.92);backdrop-filter:blur(10px);border:1px solid var(--line-2);border-radius:18px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.scaremenu .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+@media (max-width:520px){.scaremenu .grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.scaremenu .grid button{display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 4px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--fg);font-size:12px;font-weight:600}
+.scaremenu .grid button span{font-size:22px;line-height:1.1}
+.scaremenu .grid button:hover{background:var(--surface-2);border-color:rgba(141,255,166,.35)}
+.scaremenu .grid button:disabled{opacity:.45;cursor:wait}
+.scaremenu .opts2{display:flex;align-items:center;gap:12px;font-size:12.5px;color:var(--muted)}
+.scaremenu .opts2 input[type=range]{flex:1;min-width:0}
+.scaremenu .opts2 label{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.scaremenu .head{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;color:var(--muted)}
+.scaremenu .head b{color:var(--fg);font-size:14px}
+.screen.idle .scaremenu{opacity:1}
+/* o fantasminha pulando na tela */
+.boo{position:absolute;left:50%;bottom:0;width:min(34%,300px);transform:translate(-50%,105%);z-index:4;pointer-events:none;display:flex;flex-direction:column;align-items:center}
+.boo svg{width:100%;filter:drop-shadow(0 0 40px rgba(141,255,166,.45))}
+.boo small{font:700 13px var(--sans);color:#fff;background:rgba(12,9,13,.7);padding:4px 10px;border-radius:999px;margin-bottom:6px;white-space:nowrap}
+.boo.go{animation:boo 1.9s cubic-bezier(.2,.9,.25,1) forwards}
+@keyframes boo{0%{transform:translate(-50%,105%) scale(.7)}14%{transform:translate(-50%,8%) scale(1.08)}22%{transform:translate(-50%,12%) scale(1)}78%{transform:translate(-50%,12%) scale(1);opacity:1}100%{transform:translate(-50%,105%) scale(.9);opacity:0}}
+@media (prefers-reduced-motion:reduce){.boo.go{animation:booFade 1.9s forwards}@keyframes booFade{0%{transform:translate(-50%,12%);opacity:0}15%,75%{transform:translate(-50%,12%);opacity:1}100%{transform:translate(-50%,12%);opacity:0}}}
+@media (prefers-reduced-motion:no-preference){.screen.shake{animation:shake .45s linear}}
+@keyframes shake{0%,100%{transform:translate(0,0)}15%{transform:translate(-6px,2px)}30%{transform:translate(5px,-3px)}45%{transform:translate(-4px,3px)}60%{transform:translate(4px,-2px)}75%{transform:translate(-2px,1px)}}
+.screen.menuopen.idle .reactbar{opacity:1;pointer-events:auto}
+.screen.menuopen.idle{cursor:auto}
 /* aviso de versão nova */
 .toast{position:fixed;right:max(20px,env(safe-area-inset-right,0px));bottom:max(20px,env(safe-area-inset-bottom,0px));z-index:50;display:flex;align-items:center;gap:14px;max-width:min(420px,calc(100vw - 40px));
   background:var(--surface-2);border:1px solid var(--line-2);border-radius:18px;padding:12px 12px 12px 16px;box-shadow:0 24px 60px -20px rgba(0,0,0,.8)}
@@ -258,6 +369,40 @@ details p{margin:8px 0 0}
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <radialGradient id="gBody" cx="40%" cy="30%" r="80%"><stop offset="0" stop-color="#ffffff"/><stop offset=".7" stop-color="#ece6f2"/><stop offset="1" stop-color="#cfc6da"/></radialGradient>
+    <radialGradient id="gFlame" cx="50%" cy="60%" r="60%"><stop offset="0" stop-color="#fff6c8"/><stop offset=".45" stop-color="#ffc24a"/><stop offset="1" stop-color="#ff7a1a" stop-opacity="0"/></radialGradient>
+    <!-- Penumbra: o fantasminha da Sessão de Série (personagem original) -->
+    <symbol id="penumbra" viewBox="0 0 150 150">
+      <ellipse cx="62" cy="144" rx="38" ry="4" fill="#000" opacity=".25"/>
+      <path d="M62 10C33 10 18 34 18 64v50q11 13 22 0q11-13 22 0q11 13 22 0q11-13 22 0V64C106 34 91 10 62 10z" fill="url(#gBody)"/>
+      <path d="M98 70q16 2 22 14" stroke="#e7e0ee" stroke-width="10" stroke-linecap="round" fill="none"/>
+      <rect x="83" y="92" width="14" height="11" rx="2" fill="#d9cfe4" transform="rotate(-12 90 97)"/>
+      <path d="M84 95l2 2m2-3l2 2m2-3l2 2m-8 6l2 2m2-3l2 2m2-3l2 2" stroke="#9c8fab" stroke-width="1.2" stroke-linecap="round" transform="rotate(-12 90 97)"/>
+      <ellipse cx="48" cy="56" rx="7.5" ry="10" fill="#1b1420"/><ellipse cx="74" cy="56" rx="7.5" ry="10" fill="#1b1420"/>
+      <circle cx="50.5" cy="52" r="2.6" fill="#fff"/><circle cx="76.5" cy="52" r="2.6" fill="#fff"/>
+      <ellipse cx="61" cy="77" rx="5" ry="6.5" fill="#1b1420"/>
+      <ellipse cx="38" cy="70" rx="6" ry="3.5" fill="#ff9fb4" opacity=".55"/><ellipse cx="84" cy="70" rx="6" ry="3.5" fill="#ff9fb4" opacity=".55"/>
+      <path d="M121 84v8" stroke="#6b5a3e" stroke-width="2.2"/>
+      <circle cx="121" cy="112" r="24" fill="url(#gFlame)" opacity=".55"/>
+      <path d="M112 93h18l-2 5h-14z" fill="#3b2f3f"/>
+      <rect x="113" y="98" width="16" height="22" rx="3" fill="rgba(255,214,120,.18)" stroke="#3b2f3f" stroke-width="2.4"/>
+      <path d="M121 102c3 4 4 7 0 11c-4-4-3-7 0-11z" fill="#ffd36b"/>
+      <path d="M111 120h20l-2 4h-16z" fill="#3b2f3f"/>
+    </symbol>
+    <symbol id="bat" viewBox="0 0 64 28"><path d="M32 8c2-5 5-6 6-8c0 3 1 5 3 6c6-3 14-2 23 6c-6-1-9 1-11 5c-3-3-7-3-9 1c-2-3-5-3-7 0c-1-3-3-5-5-5s-4 2-5 5c-2-3-5-3-7 0c-2-4-6-4-9-1c-2-4-5-6-11-5c9-8 17-9 23-6c2-1 3-3 3-6c1 2 4 3 6 8z" fill="currentColor"/></symbol>
+  </defs>
+</svg>
+<div class="fx" aria-hidden="true">
+  <div class="moon"></div>
+  <svg class="web" viewBox="0 0 200 200"><g stroke="currentColor" fill="none" stroke-width="1.2"><path d="M0 0L200 60M0 0L160 160M0 0L60 200M0 0L120 190M0 0L195 115"/><path d="M38 11q6 14 -3 27q12 6 15 18q12-2 22-1q-1-14 6-24q-14-5-15-26"/><path d="M70 21q10 25 -6 50q22 10 27 33q22-4 40-2q-2-26 12-44q-26-10-28-48"/><path d="M104 31q14 36 -9 72q31 14 39 48q32-6 58-3"/></g></svg>
+  <svg class="web r" viewBox="0 0 200 200"><g stroke="currentColor" fill="none" stroke-width="1.2"><path d="M0 0L200 60M0 0L160 160M0 0L60 200M0 0L120 190M0 0L195 115"/><path d="M38 11q6 14 -3 27q12 6 15 18q12-2 22-1q-1-14 6-24q-14-5-15-26"/><path d="M70 21q10 25 -6 50q22 10 27 33q22-4 40-2q-2-26 12-44q-26-10-28-48"/></g></svg>
+  <div class="bat"><svg viewBox="0 0 64 28"><use href="#bat"/></svg></div>
+  <div class="bat b2"><svg viewBox="0 0 64 28"><use href="#bat"/></svg></div>
+  <div class="bat b3"><svg viewBox="0 0 64 28"><use href="#bat"/></svg></div>
+  <div class="fog"></div><div class="fog b"></div>
+</div>
 <div class="app" id="app" data-view="home">
   <header class="top">
     <div class="brand">
@@ -266,15 +411,17 @@ details p{margin:8px 0 0}
     </div>
     <div class="faces" id="topFaces" hidden></div>
     <div class="spacer"></div>
+    <button class="clima" id="climaBtn" type="button" aria-pressed="false" title="Modo terror">🎃 <span class="lbl" id="climaLbl">Modo terror</span></button>
     <div class="me" id="meChip" title="Seu nome na sala"><span class="av" id="meAv">?</span><span>Você é <b id="meName">…</b></span></div>
   </header>
 
   <!-- ========== INÍCIO ========== -->
   <section class="home" id="home">
-    <div>
-      <h1 class="hello" id="hello">Oi, <em id="helloName">pessoa</em>.<br>Bora assistir junto?</h1>
+    <div class="hero">
+      <h1 class="hello" id="hello"><span id="helloA">Oi,</span> <em id="helloName">pessoa</em>.<br><span id="helloB">Bora assistir junto?</span></h1>
+      <svg class="mascot float" viewBox="0 0 150 150" role="img" aria-label="Penumbra, o fantasminha da Sessão de Série"><use href="#penumbra"/></svg>
     </div>
-    <p class="lede">Abra uma sala, mande o código e cada um assiste do próprio sofá, com imagem e som direto do seu PC.</p>
+    <p class="lede" id="lede">Abra uma sala, mande o código e cada um assiste do próprio sofá, com imagem e som direto do seu PC.</p>
     <label class="whoami" for="nameInput">Seus amigos vão te ver como <input class="field" id="nameInput" maxlength="24" placeholder="Seu nome" autocomplete="off"></label>
 
     <div class="choices">
@@ -425,12 +572,21 @@ details p{margin:8px 0 0}
     <div class="stage">
       <div class="screen" id="screen">
         <video id="video" playsinline autoplay muted></video>
-        <div class="empty" id="empty"><div><div class="spinner" id="emptySpin" hidden></div><strong id="emptyTitle">Preparando a sala</strong><span id="emptyText">Só um instante.</span></div></div>
+        <div class="empty" id="empty"><div><svg class="mascot float" viewBox="0 0 150 150" aria-hidden="true"><use href="#penumbra"/></svg><div class="spinner" id="emptySpin" hidden></div><strong id="emptyTitle">Preparando a sala</strong><span id="emptyText">Só um instante.</span></div></div>
         <div class="floaters" id="floaters"></div>
         <div class="chatfloat" id="chatFloat"></div>
         <div class="onair" id="liveBadge" hidden><i></i>AO VIVO<span id="liveCount"></span></div>
         <div class="overlay"><button id="fsBtn" type="button">Tela cheia</button></div>
         <div class="reactbar" id="reactBar" role="group" aria-label="Reações"></div>
+        <div class="scaremenu" id="scareMenu" hidden>
+          <div class="head"><b>Mandar um susto</b><span>toca para todo mundo da sala</span></div>
+          <div class="grid" id="scareGrid"></div>
+          <div class="opts2">
+            <span>Volume</span><input type="range" id="scareVol" min="0" max="1" step="0.05" aria-label="Volume dos sustos">
+            <label><input type="checkbox" id="scareMute"> Silenciar para mim</label>
+          </div>
+        </div>
+        <div class="boo" id="boo" aria-hidden="true"><small id="booName"></small><svg viewBox="0 0 150 150"><use href="#penumbra"/></svg></div>
         <button class="btn unmute" id="unmuteBtn" hidden>Ativar som</button>
       </div>
 
@@ -791,7 +947,9 @@ details p{margin:8px 0 0}
     // tela inteira (ou nada escolhido): todo o som do PC, menos o Discord
     return { except: true, label: "todo o PC, menos o Discord" };
   }
+  let currentAudioTarget = null;
   function helperStart(target){
+    currentAudioTarget = target;
     return new Promise(res => {
       if (!target) { res({ type: "error", message: "Você escolheu a tela inteira. Para enviar só o som de um programa, escolha uma janela ou o programa na lista." }); return; }
       helper.waiting = res;
@@ -1106,7 +1264,7 @@ details p{margin:8px 0 0}
       try { appCtx = new AudioContext({ sampleRate: 48000, latencyHint: "interactive" }); } catch(e) { appCtx = new AudioContext(); }
     }
     $("startBtn").disabled = true;
-    unlockAudio();
+    unlockAudio(); sfx.ensure();
     try {
       const { out, audioWarn } = await captureStream(appCtx);
       stream = out;
@@ -1335,7 +1493,7 @@ details p{margin:8px 0 0}
     if (!window.Peer) { setStatus("view", "Não carregou a biblioteca de conexão. Verifique a internet e recarregue.", "bad"); return; }
     if (!social.myName(true)) { social.askName(); setStatus("view", "Escreva seu nome antes de entrar.", "warn"); return; }
     $("joinCode").value = code;
-    unlockAudio(); video.muted = false; // o clique em "Entrar" libera o som no navegador
+    unlockAudio(); sfx.ensure(); video.muted = false; // o clique em "Entrar" libera o som no navegador
     wanted = code; ended = false; everConnected = false; attempts = 0;
     $("joinBtn").disabled = true;
     setTab(false); social.reset();
@@ -1373,11 +1531,154 @@ details p{margin:8px 0 0}
   function wake(){
     $("screen").classList.remove("idle");
     clearTimeout(idleTimer);
-    idleTimer = setTimeout(() => $("screen").classList.add("idle"), 2500);
+    idleTimer = setTimeout(() => { if ($("scareMenu").hidden) $("screen").classList.add("idle"); else wake(); }, 2500);
   }
   ["mousemove", "touchstart"].forEach(ev => $("screen").addEventListener(ev, wake, { passive: true }));
   $("screen").addEventListener("mouseleave", () => { clearTimeout(idleTimer); $("screen").classList.add("idle"); });
   $("screen").classList.add("idle");
+
+  // ================= SONS DE SUSTO (criados pelo próprio app, sem gravações) =================
+  const sfx = (() => {
+    let ctx = null, master = null, verbIn = null;
+    const vol = () => { const v = Number(store.get("sustoVol", "0.8")); return isFinite(v) ? Math.min(1, Math.max(0, v)) : 0.8; };
+    const muted = () => store.get("sustoMudo", "0") === "1";
+
+    function ensure(){
+      if (!ctx) {
+        ctx = new (window.AudioContext || window.webkitAudioContext)();
+        master = ctx.createGain(); master.gain.value = vol();
+        const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 6;
+        master.connect(comp).connect(ctx.destination);
+        // eco de casarão: reverberação gerada na hora
+        const len = Math.floor(ctx.sampleRate * 3.2), buf = ctx.createBuffer(2, len, ctx.sampleRate);
+        for (let ch = 0; ch < 2; ch++) { const d = buf.getChannelData(ch); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.6); }
+        const conv = ctx.createConvolver(); conv.buffer = buf;
+        verbIn = ctx.createGain(); verbIn.connect(conv).connect(master);
+      }
+      if (ctx.state !== "running") ctx.resume().catch(() => {});
+      return ctx;
+    }
+    function setVolume(v){ store.set("sustoVol", String(v)); if (master) master.gain.value = Number(v); }
+    // liga um nó na saída, com uma parte indo para o eco
+    function out(node, dry = 1, wet = 0.35){
+      const d = ctx.createGain(); d.gain.value = dry; node.connect(d).connect(master);
+      const w = ctx.createGain(); w.gain.value = wet; node.connect(w).connect(verbIn);
+    }
+    function noise(sec, brown){
+      const len = Math.floor(ctx.sampleRate * sec), b = ctx.createBuffer(1, len, ctx.sampleRate), d = b.getChannelData(0);
+      let last = 0;
+      for (let i = 0; i < len; i++) { const w = Math.random() * 2 - 1; if (brown) { last = (last + 0.02 * w) / 1.02; d[i] = last * 3.5; } else d[i] = w; }
+      const s = ctx.createBufferSource(); s.buffer = b; return s;
+    }
+    function env(g, t, a, peak, dec, end = 0.0001){
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(end, t + a + dec);
+    }
+    function shaper(amount){
+      const ws = ctx.createWaveShaper(), n = 1024, c = new Float32Array(n);
+      for (let i = 0; i < n; i++) { const x = i * 2 / n - 1; c[i] = (1 + amount) * x / (1 + amount * Math.abs(x)); }
+      ws.curve = c; return ws;
+    }
+
+    const SOUNDS = {
+      // acorde dissonante com ataque seco, o clássico "pulo" de filme
+      susto(t){
+        const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.setValueAtTime(9000, t); lp.frequency.exponentialRampToValueAtTime(900, t + 1.8);
+        const g = ctx.createGain(); env(g, t, 0.006, 0.55, 2.2);
+        [196, 207.7, 277.2, 293.7, 415.3, 440, 587].forEach((f, i) => {
+          const o = ctx.createOscillator(); o.type = "sawtooth"; o.frequency.value = f; o.detune.value = (i % 2 ? 9 : -9);
+          o.connect(lp); o.start(t); o.stop(t + 2.4);
+        });
+        const n = noise(0.25); const ng = ctx.createGain(); env(ng, t, 0.002, 0.6, 0.22); n.connect(ng).connect(lp); n.start(t);
+        lp.connect(g); out(g, 0.9, 0.55);
+      },
+      // grito agudo com vibrato
+      grito(t){
+        const o = ctx.createOscillator(); o.type = "sawtooth";
+        o.frequency.setValueAtTime(520, t); o.frequency.exponentialRampToValueAtTime(1150, t + 0.25); o.frequency.exponentialRampToValueAtTime(760, t + 1.4);
+        const lfo = ctx.createOscillator(); lfo.frequency.value = 7; const lg = ctx.createGain(); lg.gain.value = 38; lfo.connect(lg).connect(o.frequency);
+        const g = ctx.createGain(); env(g, t, 0.06, 1.15, 1.45);
+        const sum = ctx.createGain();
+        [[950, 6], [2600, 8], [3400, 10]].forEach(([f, q]) => { const b = ctx.createBiquadFilter(); b.type = "bandpass"; b.frequency.value = f; b.Q.value = q; o.connect(b).connect(sum); });
+        const n = noise(1.5); const nb = ctx.createBiquadFilter(); nb.type = "bandpass"; nb.frequency.value = 3000; nb.Q.value = 1.2;
+        const ng = ctx.createGain(); ng.gain.value = 0.25; n.connect(nb).connect(ng).connect(sum);
+        sum.connect(shaper(4)).connect(g); out(g, 0.8, 0.45);
+        o.start(t); lfo.start(t); n.start(t); o.stop(t + 1.6); lfo.stop(t + 1.6);
+      },
+      // porta velha rangendo
+      porta(t){
+        const o = ctx.createOscillator(); o.type = "sawtooth";
+        const steps = 24, curve = new Float32Array(steps);
+        for (let i = 0; i < steps; i++) curve[i] = 95 + 60 * Math.sin(i / 3.1) + Math.random() * 25;
+        o.frequency.setValueCurveAtTime(curve, t, 1.9);
+        const tick = ctx.createOscillator(); tick.type = "square"; tick.frequency.setValueAtTime(22, t); tick.frequency.linearRampToValueAtTime(9, t + 1.9);
+        const am = ctx.createGain(); am.gain.value = 0.5; const tg = ctx.createGain(); tg.gain.value = 0.5; tick.connect(tg).connect(am.gain);
+        const bp = ctx.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 1100; bp.Q.value = 3;
+        const g = ctx.createGain(); env(g, t, 0.15, 3.4, 1.9, 0.02);
+        o.connect(am).connect(bp).connect(g); out(g, 0.9, 0.4);
+        o.start(t); tick.start(t); o.stop(t + 2.1); tick.stop(t + 2.1);
+      },
+      // risada do mal: "ha ha ha" grave e descendo
+      risada(t){
+        const sum = ctx.createGain(); sum.gain.value = 0.9;
+        [[650, 5], [1100, 7], [2400, 9]].forEach(([f, q]) => { const b = ctx.createBiquadFilter(); b.type = "bandpass"; b.frequency.value = f; b.Q.value = q; b.connect(sum); sum._b = (sum._b || []).concat(b); });
+        for (let k = 0; k < 6; k++) {
+          const st = t + k * 0.24, base = 165 * Math.pow(0.93, k);
+          const o = ctx.createOscillator(); o.type = "sawtooth"; o.frequency.setValueAtTime(base * 1.15, st); o.frequency.exponentialRampToValueAtTime(base, st + 0.16);
+          const g = ctx.createGain(); env(g, st, 0.02, 0.9, 0.17);
+          o.connect(g); sum._b.forEach(b => g.connect(b));
+          const n = noise(0.08); const ng = ctx.createGain(); env(ng, st, 0.005, 0.18, 0.07); n.connect(ng); sum._b.forEach(b => ng.connect(b)); n.start(st);
+          o.start(st); o.stop(st + 0.22);
+        }
+        const g2 = ctx.createGain(); g2.gain.value = 2.2; sum.connect(shaper(2)).connect(g2); out(g2, 0.8, 0.7);
+      },
+      // coração acelerando
+      coracao(t){
+        let st = t, gap = 0.82;
+        for (let k = 0; k < 6; k++) {
+          [0, 0.17].forEach((off, j) => {
+            const o = ctx.createOscillator(); o.type = "sine";
+            o.frequency.setValueAtTime(78, st + off); o.frequency.exponentialRampToValueAtTime(38, st + off + 0.16);
+            const g = ctx.createGain(); env(g, st + off, 0.008, j ? 0.55 : 0.95, 0.2);
+            o.connect(g); out(g, 1, 0.12); o.start(st + off); o.stop(st + off + 0.3);
+          });
+          st += gap; gap *= 0.84;
+        }
+      },
+      // trovão: estalo e ronco longo
+      trovao(t){
+        const crack = noise(0.12); const hp = ctx.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 1400;
+        const cg = ctx.createGain(); env(cg, t, 0.003, 0.7, 0.12); crack.connect(hp).connect(cg); out(cg, 0.8, 0.5); crack.start(t);
+        const r = noise(3.6, true); const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.setValueAtTime(700, t); lp.frequency.exponentialRampToValueAtTime(110, t + 3.4);
+        const rg = ctx.createGain(); rg.gain.setValueAtTime(0.0001, t); rg.gain.exponentialRampToValueAtTime(1.2, t + 0.08);
+        rg.gain.exponentialRampToValueAtTime(0.5, t + 0.7); rg.gain.exponentialRampToValueAtTime(0.9, t + 1.1); rg.gain.exponentialRampToValueAtTime(0.0001, t + 3.5);
+        r.connect(lp).connect(rg); out(rg, 1, 0.4); r.start(t + 0.04);
+      },
+      // sussurro passando de um ouvido para o outro
+      sussurro(t){
+        const n = noise(2.6); const bp = ctx.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 2800; bp.Q.value = 2.5;
+        const bp2 = ctx.createBiquadFilter(); bp2.type = "bandpass"; bp2.frequency.setValueAtTime(900, t); bp2.frequency.linearRampToValueAtTime(1600, t + 2.4); bp2.Q.value = 4;
+        const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t);
+        for (let i = 0; i < 9; i++) g.gain.linearRampToValueAtTime(0.15 + Math.random() * 0.5, t + 0.15 + i * 0.27);
+        g.gain.linearRampToValueAtTime(0.0001, t + 2.6);
+        const pan = ctx.createStereoPanner(); pan.pan.setValueAtTime(-1, t); pan.pan.linearRampToValueAtTime(1, t + 2.5);
+        const mix = ctx.createGain(); n.connect(bp).connect(mix); n.connect(bp2).connect(mix);
+        mix.connect(g).connect(pan); out(pan, 1.7, 0.6); n.start(t);
+      },
+      // BUM grave e distorcido
+      bum(t){
+        const o = ctx.createOscillator(); o.type = "sine"; o.frequency.setValueAtTime(110, t); o.frequency.exponentialRampToValueAtTime(30, t + 1.1);
+        const g = ctx.createGain(); env(g, t, 0.004, 1, 1.3);
+        const click = noise(0.03); const cg = ctx.createGain(); env(cg, t, 0.001, 0.5, 0.03); click.connect(cg).connect(g); click.start(t);
+        o.connect(shaper(6)).connect(g); out(g, 1, 0.25); o.start(t); o.stop(t + 1.5);
+      }
+    };
+
+    function play(name){
+      if (muted() || !SOUNDS[name]) return;
+      try { ensure(); SOUNDS[name](ctx.currentTime + 0.02); } catch (e) {}
+    }
+    return { play, ensure, setVolume, vol, muted, names: Object.keys(SOUNDS) };
+  })();
 
   // ================= PESSOAS, CONVERSA E REAÇÕES =================
   function setEmpty(title, text, spin){
@@ -1482,6 +1783,78 @@ details p{margin:8px 0 0}
       $("reactBar").appendChild(b);
     });
 
+    // ----- sustos: tocam para todo mundo da sala, um a cada 3 segundos por pessoa -----
+    const SCARES = {
+      susto: ["😱", "Susto"], grito: ["😨", "Grito"], porta: ["🚪", "Porta rangendo"], risada: ["😈", "Risada do mal"],
+      coracao: ["💓", "Coração"], trovao: ["⛈️", "Trovão"], sussurro: ["🌫️", "Sussurro"], bum: ["💥", "BUM"]
+    };
+    const JUMP = new Set(["susto", "grito", "risada", "bum"]);  // esses fazem o fantasminha pular na tela
+    const COOLDOWN = 3000;
+    const lastScareBy = new Map();
+    let myLastScare = 0;
+    const scareBtn = document.createElement("button");
+    scareBtn.type = "button"; scareBtn.className = "scare"; scareBtn.title = "Mandar um susto para a sala";
+    scareBtn.innerHTML = '<span class="cd" id="scareCd"></span><span style="position:relative">💀 Susto</span>';
+    $("reactBar").appendChild(scareBtn);
+    Object.entries(SCARES).forEach(([key, [em, label]]) => {
+      const b = document.createElement("button"); b.type = "button"; b.dataset.sound = key;
+      const e = document.createElement("span"); e.textContent = em;
+      b.append(e, document.createTextNode(label));
+      b.onclick = () => { scare(key); toggleMenu(false); };
+      $("scareGrid").appendChild(b);
+    });
+    function toggleMenu(open){
+      const m = $("scareMenu"); open = open == null ? m.hidden : open;
+      m.hidden = !open; $("screen").classList.toggle("menuopen", open);
+    }
+    scareBtn.onclick = e => { e.stopPropagation(); sfx.ensure(); toggleMenu(); };
+    document.addEventListener("click", e => { if (!$("scareMenu").hidden && !$("scareMenu").contains(e.target)) toggleMenu(false); });
+    document.addEventListener("keydown", e => { if (e.key === "Escape") toggleMenu(false); });
+    $("scareVol").value = sfx.vol();
+    $("scareVol").oninput = () => sfx.setVolume($("scareVol").value);
+    $("scareMute").checked = sfx.muted();
+    $("scareMute").onchange = () => store.set("sustoMudo", $("scareMute").checked ? "1" : "0");
+
+    function cooldownUI(){
+      const cd = $("scareCd");
+      scareBtn.disabled = true; $("scareGrid").querySelectorAll("button").forEach(b => b.disabled = true);
+      cd.style.transition = "none"; cd.style.transform = "scaleX(1)"; void cd.offsetWidth;
+      cd.style.transition = "transform " + COOLDOWN + "ms linear"; cd.style.transform = "scaleX(0)";
+      setTimeout(() => { scareBtn.disabled = false; $("scareGrid").querySelectorAll("button").forEach(b => b.disabled = false); }, COOLDOWN);
+    }
+    // quando o som do app já vai junto na transmissão (tela inteira ou "todo o som do PC"),
+    // os amigos ouvem o susto pela transmissão; tocar de novo no PC deles daria eco
+    function leaks(){
+      if (role !== "host" || !stream) return false;
+      const mode = audioMode();
+      return mode === "system" || (mode === "app" && !!(currentAudioTarget && currentAudioTarget.except));
+    }
+    function boo(text){
+      const b = $("boo"); $("booName").textContent = text;
+      b.classList.remove("go"); void b.offsetWidth; b.classList.add("go");
+      const sc = $("screen"); sc.classList.remove("shake"); void sc.offsetWidth; sc.classList.add("shake");
+    }
+    function showScare(sound, from){
+      const [em, label] = SCARES[sound];
+      pop(em, from);
+      if (JUMP.has(sound)) boo(from + " mandou: " + label);
+    }
+    function scare(sound){
+      if (!SCARES[sound]) return;
+      const now = Date.now(); if (now - myLastScare < COOLDOWN) return;
+      if (role === "host") {
+        if (!stream) return;
+        myLastScare = now; cooldownUI();
+        const m = { type: "scare", sound, from: myName(), leak: leaks() };
+        broadcast(m); sfx.play(sound); showScare(sound, m.from);
+        return;
+      }
+      if (viewConn && viewConn.open) {
+        myLastScare = now; cooldownUI();
+        try { viewConn.send({ type: "scare", sound }); } catch(e){}
+      }
+    }
+
     // ----- transmissor: recebe dos amigos e repassa para todos -----
     function broadcast(m){ viewers.forEach(v => { try { if (v.conn && v.conn.open) v.conn.send(m); } catch(e){} }); }
     function hostSync(){
@@ -1506,6 +1879,13 @@ details p{margin:8px 0 0}
         if (!EMOJIS.includes(d.emoji)) return;
         const m = { type: "react", from: names.get(id) || "Convidado", emoji: d.emoji };
         broadcast(m); pop(m.emoji, m.from);
+      } else if (d.type === "scare") {
+        if (!SCARES[d.sound]) return;
+        const now = Date.now();
+        if (now - (lastScareBy.get(id) || 0) < COOLDOWN - 300) return; // um susto a cada 3 s por pessoa
+        lastScareBy.set(id, now);
+        const m = { type: "scare", sound: d.sound, from: names.get(id) || "Convidado", leak: leaks() };
+        broadcast(m); sfx.play(d.sound); showScare(m.sound, m.from);
       }
     }
     function hostLeft(id){
@@ -1524,6 +1904,10 @@ details p{margin:8px 0 0}
       } else if (d.type === "chat") {
         if (d.sys) system(clean(d.text, 120)); else addChat({ from: clean(d.from, 24) || "Convidado", text: clean(d.text, 300) });
       } else if (d.type === "react" && EMOJIS.includes(d.emoji)) pop(d.emoji, clean(d.from, 24));
+      else if (d.type === "scare" && SCARES[d.sound]) {
+        if (!d.leak) sfx.play(d.sound);
+        showScare(d.sound, clean(d.from, 24) || "Alguém");
+      }
     }
 
     // ----- enviar -----
@@ -1595,6 +1979,30 @@ details p{margin:8px 0 0}
   }
   $("sideBtn").onclick = () => setSide($("session").classList.contains("noside"));
   setSide(store.get("lateral", "1") === "1");
+
+  // ================= MODO TERROR =================
+  // Liga sozinho nas sextas-feiras 13 e no Halloween (25/10 a 2/11). O botão do topo liga ou desliga de vez.
+  function spookyDay(d = new Date()){
+    const m = d.getMonth(), day = d.getDate();
+    return (d.getDay() === 5 && day === 13) || (m === 9 && day >= 25) || (m === 10 && day <= 2);
+  }
+  function applyClima(){
+    const pref = store.get("clima", "auto");
+    const on = pref === "terror" || (pref === "auto" && spookyDay());
+    if (on) document.documentElement.dataset.clima = "terror"; else delete document.documentElement.dataset.clima;
+    $("climaBtn").setAttribute("aria-pressed", on);
+    $("climaLbl").textContent = on ? "Modo terror ligado" : "Modo terror";
+    $("helloA").textContent = on ? "Boa noite," : "Oi,";
+    $("helloB").textContent = on ? "Tem coragem de assistir junto?" : "Bora assistir junto?";
+    $("lede").textContent = on
+      ? "Apague a luz, chame a turma e mande o código. Os sustos estão liberados: aperte 💀 Susto durante a sessão."
+      : "Abra uma sala, mande o código e cada um assiste do próprio sofá, com imagem e som direto do seu PC.";
+  }
+  $("climaBtn").onclick = () => {
+    const on = document.documentElement.dataset.clima === "terror";
+    store.set("clima", on ? "normal" : "terror"); applyClima();
+  };
+  applyClima();
 
   setView("home");
 
