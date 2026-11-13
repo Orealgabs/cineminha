@@ -4,7 +4,7 @@ let site = "";
 try { site = ipcRenderer.sendSync("get-site") || ""; } catch (e) {}
 contextBridge.exposeInMainWorld("sessaoApp", {
   isApp: true,
-  version: "2.4.0",
+  version: "2.5.0",
   // tela/janela escolhida na última vez: { id: "window:<hwnd>:0" | "screen:<n>:0", name }
   lastSource: () => { try { return ipcRenderer.sendSync("last-source"); } catch (e) { return { id: "", name: "" }; } },
   siteUrl: site,

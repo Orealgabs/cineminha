@@ -323,6 +323,41 @@ details p{margin:8px 0 0}
 @media (max-width:620px){.hero .mascot{width:84px}}
 .empty .mascot{width:92px;margin:0 auto 14px;opacity:.95}
 
+/* avatares com o Penumbra de cada pessoa (no modo terror) */
+.av.pen{background:radial-gradient(circle at 50% 38%,#33283a,#141017);overflow:hidden;padding:0;box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--c) 70%,transparent)}
+.av.pen svg{width:100%;height:100%;display:block}
+.faces .av.pen{box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--c) 70%,transparent),0 0 0 2.5px var(--bg)}
+/* escolha da fantasia */
+.costumes{display:none;flex-direction:column;gap:10px}
+:root[data-clima="terror"] .costumes{display:flex}
+.clabel{font-size:14px;color:var(--muted)}
+.cgrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;max-width:760px}
+@media (max-width:760px){.cgrid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.cgrid button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px 8px;border-radius:14px;border:1px solid var(--line);background:var(--surface);color:var(--muted);font-size:12px;font-weight:600}
+.cgrid button svg{width:100%;max-width:74px;aspect-ratio:1;display:block}
+.cgrid button:hover{background:var(--surface-2);color:var(--fg)}
+.cgrid button[aria-pressed="true"]{border-color:var(--accent);color:var(--fg);background:color-mix(in srgb,var(--accent) 10%,var(--surface));box-shadow:0 0 0 4px rgba(255,138,42,.12)}
+/* bichinhos com movimentos sutis */
+@media (prefers-reduced-motion:no-preference){
+  .pet-bat .wing-l{transform-box:fill-box;transform-origin:100% 40%;animation:flapL .32s ease-in-out infinite alternate}
+  .pet-bat .wing-r{transform-box:fill-box;transform-origin:0% 40%;animation:flapR .32s ease-in-out infinite alternate}
+  .pet-cat .blink{transform-box:fill-box;transform-origin:50% 50%;animation:blink 5s infinite}
+  .pet-cat .tail{transform-box:fill-box;transform-origin:0% 100%;animation:wag 2.4s ease-in-out infinite}
+  .pet-owl{transform-box:fill-box;transform-origin:50% 90%;animation:tilt 6s ease-in-out infinite}
+  .pet-crow{transform-box:fill-box;transform-origin:30% 100%;animation:peck 4.2s ease-in-out infinite}
+  .pet-parrot{transform-box:fill-box;transform-origin:50% 100%;animation:bob 1.8s ease-in-out infinite}
+  .pet-rat{transform-box:fill-box;transform-origin:50% 100%;animation:sniff 3.2s ease-in-out infinite}
+  .pet-scarab{transform-box:fill-box;transform-origin:50% 50%;animation:crawl 3.6s ease-in-out infinite}
+}
+@keyframes flapL{from{transform:scaleY(1) rotate(0)}to{transform:scaleY(.55) rotate(-8deg)}}
+@keyframes flapR{from{transform:scaleY(1) rotate(0)}to{transform:scaleY(.55) rotate(8deg)}}
+@keyframes blink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}
+@keyframes wag{0%,100%{transform:rotate(0)}50%{transform:rotate(-14deg)}}
+@keyframes tilt{0%,40%,100%{transform:rotate(0)}48%,60%{transform:rotate(-12deg)}68%,80%{transform:rotate(9deg)}}
+@keyframes peck{0%,70%,100%{transform:rotate(0)}76%{transform:rotate(16deg)}82%{transform:rotate(0)}88%{transform:rotate(14deg)}}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-2.5px)}}
+@keyframes sniff{0%,60%,100%{transform:translateY(0) rotate(0)}66%{transform:translateY(-2px) rotate(-4deg)}72%{transform:translateY(0) rotate(3deg)}}
+@keyframes crawl{0%,100%{transform:translate(0,0) rotate(0)}50%{transform:translate(2px,-3px) rotate(6deg)}}
 /* botão do modo terror no topo */
 .clima{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);color:var(--muted);font-size:13px;font-weight:600}
 .clima:hover{color:var(--fg);border-color:var(--line-2)}
@@ -349,7 +384,7 @@ details p{margin:8px 0 0}
 .screen.idle .scaremenu{opacity:1}
 /* o fantasminha pulando na tela */
 .boo{position:absolute;left:50%;bottom:0;width:min(34%,300px);transform:translate(-50%,105%);z-index:4;pointer-events:none;display:flex;flex-direction:column;align-items:center}
-.boo svg{width:100%;filter:drop-shadow(0 0 40px rgba(141,255,166,.45))}
+.boo svg{width:100%;height:auto;filter:drop-shadow(0 0 40px rgba(141,255,166,.45))}
 .boo small{font:700 13px var(--sans);color:#fff;background:rgba(12,9,13,.7);padding:4px 10px;border-radius:999px;margin-bottom:6px;white-space:nowrap}
 .boo.go{animation:boo 1.9s cubic-bezier(.2,.9,.25,1) forwards}
 @keyframes boo{0%{transform:translate(-50%,105%) scale(.7)}14%{transform:translate(-50%,8%) scale(1.08)}22%{transform:translate(-50%,12%) scale(1)}78%{transform:translate(-50%,12%) scale(1);opacity:1}100%{transform:translate(-50%,105%) scale(.9);opacity:0}}
@@ -371,60 +406,442 @@ details p{margin:8px 0 0}
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+
+  <!-- ===== base ===== -->
+  <path id="p-B" d="M110 30C66 30 44 64 44 104C44 134 52 156 50 182L48 202Q58 216 68 204Q78 218 90 205Q101 219 112 206Q123 219 134 205Q146 218 156 204Q166 214 172 200L170 182C168 156 176 134 176 104C176 64 154 30 110 30Z"/>
+  <clipPath id="p-bodyClip"><use href="#p-B"/></clipPath>
+  <radialGradient id="p-body" cx="36%" cy="26%" r="88%"><stop offset="0" stop-color="#ffffff"/><stop offset=".6" stop-color="#efe9f5"/><stop offset="1" stop-color="#c8bdd8"/></radialGradient>
+  <linearGradient id="p-sideShade" x1="0" y1="0" x2="1" y2="0"><stop offset=".55" stop-color="#5a4a78" stop-opacity="0"/><stop offset="1" stop-color="#5a4a78" stop-opacity=".28"/></linearGradient>
+  <filter id="p-soft"><feGaussianBlur stdDeviation="3.2"/></filter>
+  <filter id="p-soft2"><feGaussianBlur stdDeviation="1.4"/></filter>
+  <radialGradient id="p-flame" cx="50%" cy="55%" r="60%"><stop offset="0" stop-color="#fff6c8"/><stop offset=".45" stop-color="#ffc24a"/><stop offset="1" stop-color="#ff7a1a" stop-opacity="0"/></radialGradient>
+  <linearGradient id="p-gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe7a6"/><stop offset="1" stop-color="#d48f22"/></linearGradient>
+  <!-- tecidos -->
+  <linearGradient id="p-purple" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8a63c9"/><stop offset="1" stop-color="#3b2364"/></linearGradient>
+  <linearGradient id="p-purpleD" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5b3b90"/><stop offset="1" stop-color="#2a1747"/></linearGradient>
+  <linearGradient id="p-wine" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a02a52"/><stop offset="1" stop-color="#47101f"/></linearGradient>
+  <linearGradient id="p-wineD" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5a1428"/><stop offset="1" stop-color="#2c0814"/></linearGradient>
+  <linearGradient id="p-orangeL" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffbd6a"/><stop offset="1" stop-color="#e2641a"/></linearGradient>
+  <linearGradient id="p-pumpkin" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffb04a"/><stop offset=".6" stop-color="#f27a1e"/><stop offset="1" stop-color="#b84e0c"/></linearGradient>
+  <linearGradient id="p-leaf" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8fdc5e"/><stop offset="1" stop-color="#3f8a2c"/></linearGradient>
+  <linearGradient id="p-denim" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5f86c4"/><stop offset="1" stop-color="#2d4878"/></linearGradient>
+  <linearGradient id="p-straw" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f3d27a"/><stop offset="1" stop-color="#b98a2e"/></linearGradient>
+  <linearGradient id="p-bandage" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6eedb"/><stop offset="1" stop-color="#d9caa8"/></linearGradient>
+  <linearGradient id="p-red" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff5a5f"/><stop offset="1" stop-color="#a81d2c"/></linearGradient>
+  <linearGradient id="p-brown" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7a4a2a"/><stop offset="1" stop-color="#3b2010"/></linearGradient>
+  <pattern id="p-velvet" width="4" height="4" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r=".6" fill="#fff" opacity=".06"/><circle cx="3" cy="3" r=".7" fill="#000" opacity=".14"/></pattern>
+  <pattern id="p-weave" width="5" height="5" patternUnits="userSpaceOnUse"><path d="M0 2.5h5M2.5 0v5" stroke="#000" stroke-opacity=".1" stroke-width=".8"/></pattern>
+  <pattern id="p-dots" width="12" height="12" patternUnits="userSpaceOnUse"><circle cx="3" cy="3" r="2" fill="#fff" opacity=".9"/><circle cx="9" cy="9" r="2" fill="#fff" opacity=".9"/></pattern>
+
+  <!-- rosto padrão -->
+  <g id="p-eyeL"><ellipse cx="88" cy="106" rx="14" ry="17.5" fill="#1b1420"/><circle cx="82.5" cy="98" r="5.6" fill="#fff"/><circle cx="93" cy="113" r="2.3" fill="#fff" opacity=".85"/></g>
+  <g id="p-eyeR"><ellipse cx="132" cy="106" rx="14" ry="17.5" fill="#1b1420"/><circle cx="126.5" cy="98" r="5.6" fill="#fff"/><circle cx="137" cy="113" r="2.3" fill="#fff" opacity=".85"/></g>
+  <g id="p-cheeks"><ellipse cx="71" cy="128" rx="9" ry="5" fill="#ff8fab" opacity=".55"/><ellipse cx="149" cy="128" rx="9" ry="5" fill="#ff8fab" opacity=".55"/></g>
+  <g id="p-face"><use href="#p-eyeL"/><use href="#p-eyeR"/><use href="#p-cheeks"/><ellipse cx="110" cy="133" rx="5" ry="6" fill="#1b1420"/></g>
+
+  <!-- corpo: preenchimento e contorno separados para a roupa ficar entre eles -->
+  <g id="p-bodyFill"><use href="#p-B" fill="url(#p-body)"/><use href="#p-B" fill="url(#p-sideShade)"/><path d="M70 54C78 46 90 42 100 41" stroke="#fff" stroke-width="5" stroke-linecap="round"/></g>
+  <use id="p-bodyLine" href="#p-B" fill="none" stroke="#1b1420" stroke-width="3.4" stroke-linejoin="round"/>
+
+  <!-- bracinho segurando a lanterna -->
+  <g id="p-arm"><path d="M162 150Q182 154 194 168" stroke="#1b1420" stroke-width="18" stroke-linecap="round" fill="none"/><path d="M162 150Q182 154 194 168" stroke="#ece6f2" stroke-width="12" stroke-linecap="round" fill="none"/></g>
+  <g id="p-hand"><circle cx="196" cy="170" r="7.5" fill="#ece6f2" stroke="#1b1420" stroke-width="2.8"/></g>
+  <!-- lanterna com ferradura virada para baixo -->
+  <g id="p-lantern">
+    <circle cx="0" cy="34" r="36" fill="url(#p-flame)" opacity=".62"/>
+    <path d="M0 -4v10" stroke="#5b4a35" stroke-width="2.6"/>
+    <path d="M-11 6h22l-3 6h-16z" fill="#2c2330" stroke="#1b1420" stroke-width="2.2" stroke-linejoin="round"/>
+    <rect x="-10" y="12" width="20" height="28" rx="4" fill="rgba(255,214,120,.25)" stroke="#1b1420" stroke-width="3"/>
+    <path d="M0 18c4 5 5 9 0 14c-5-5-4-9 0-14z" fill="#ffd36b"/>
+    <path d="M-12 40h24l-3 5h-18z" fill="#2c2330" stroke="#1b1420" stroke-width="2.2" stroke-linejoin="round"/>
+  </g>
+  <g id="p-lanternAt"><g transform="translate(198 176)"><use href="#p-lantern"/></g></g>
+
+  <!-- gatinho preto sentado (frente), com o rabo enrolando nas patinhas -->
+  <g id="p-cat" class="pet pet-cat">
+    <g class="tail"><path d="M30 40C44 40 50 30 46 22" stroke="#1b1420" stroke-width="8" fill="none" stroke-linecap="round"/>
+    <path d="M30 40C44 40 50 30 46 22" stroke="#231a2a" stroke-width="4.5" fill="none" stroke-linecap="round"/></g>
+    <path d="M6 42C2 30 6 18 14 14C10 8 12 2 20 0C28 2 30 8 26 14C34 18 38 30 34 42Z" fill="#231a2a" stroke="#1b1420" stroke-width="2.4" stroke-linejoin="round"/>
+    <ellipse cx="20" cy="2" rx="13" ry="11.5" fill="#231a2a" stroke="#1b1420" stroke-width="2.4"/>
+    <path d="M9 -5L7 -17L16 -9Z" fill="#231a2a" stroke="#1b1420" stroke-width="2.2" stroke-linejoin="round"/>
+    <path d="M31 -5L33 -17L24 -9Z" fill="#231a2a" stroke="#1b1420" stroke-width="2.2" stroke-linejoin="round"/>
+    <path d="M9.5 -8L8.6 -13.5L12.5 -10Z M30.5 -8L31.4 -13.5L27.5 -10Z" fill="#ff9fb4" opacity=".8"/>
+    <g class="blink"><ellipse cx="15" cy="2" rx="3.6" ry="4.2" fill="#ffd23f"/><ellipse cx="25" cy="2" rx="3.6" ry="4.2" fill="#ffd23f"/>
+    <ellipse cx="15" cy="2.3" rx="1.2" ry="3.4" fill="#1b1420"/><ellipse cx="25" cy="2.3" rx="1.2" ry="3.4" fill="#1b1420"/>
+    <circle cx="13.8" cy=".2" r="1" fill="#fff"/><circle cx="23.8" cy=".2" r="1" fill="#fff"/></g>
+    <path d="M18.6 7.2h2.8l-1.4 1.6z" fill="#ff9fb4"/>
+    <path d="M20 8.8q-1.6 2-3.2.8M20 8.8q1.6 2 3.2.8" stroke="#6b5a7a" stroke-width="1" fill="none" stroke-linecap="round"/>
+    <path d="M10 7.5l-8-1.5M10 9.5l-8 1M30 7.5l8-1.5M30 9.5l8 1" stroke="#6b5a7a" stroke-width=".9" stroke-linecap="round"/>
+    <path d="M12 42v-6M28 42v-6" stroke="#1b1420" stroke-width="1.6" stroke-linecap="round"/>
+  </g>
+
+  <!-- ===== bichinhos companheiros ===== -->
+  <g id="p-bat" class="pet pet-bat">
+    <path class="wing-l" d="M-6 -1Q-18 -16 -34 -10Q-29 -3 -31 5Q-25 1 -21 7Q-17 2 -13 7Q-10 3 -6 5Z" fill="#2a1f33" stroke="#1b1420" stroke-width="2.2" stroke-linejoin="round"/>
+    <path class="wing-r" d="M6 -1Q18 -16 34 -10Q29 -3 31 5Q25 1 21 7Q17 2 13 7Q10 3 6 5Z" fill="#2a1f33" stroke="#1b1420" stroke-width="2.2" stroke-linejoin="round"/>
+    <path d="M-10 -6Q-20 -11 -28 -8M10 -6Q20 -11 28 -8" stroke="#4a3a58" stroke-width="1.4" fill="none"/>
+    <path d="M-6 -8L-8 -16L-1 -10ZM6 -8L8 -16L1 -10Z" fill="#2a1f33" stroke="#1b1420" stroke-width="2" stroke-linejoin="round"/>
+    <ellipse cx="0" cy="1" rx="9.5" ry="10" fill="#33263e" stroke="#1b1420" stroke-width="2.2"/>
+    <circle cx="-3.6" cy="-1" r="3.2" fill="#fff"/><circle cx="3.6" cy="-1" r="3.2" fill="#fff"/>
+    <circle cx="-3.2" cy="-.6" r="1.7" fill="#1b1420"/><circle cx="4" cy="-.6" r="1.7" fill="#1b1420"/>
+    <path d="M-2.2 4.6l1 2.6l1-2.2M.2 4.8l1 2.4l1-2.6" fill="#fff" stroke="#fff" stroke-width=".6"/>
+    <ellipse cx="-6.5" cy="3.5" rx="2" ry="1.2" fill="#ff8fab" opacity=".6"/><ellipse cx="6.5" cy="3.5" rx="2" ry="1.2" fill="#ff8fab" opacity=".6"/>
+  </g>
+  <g id="p-scarab" class="pet pet-scarab">
+    <g stroke="#1b1420" stroke-width="2" stroke-linecap="round"><path d="M-9 -2l-7-4M-9 4l-8 1M-8 10l-6 6M9 -2l7-4M9 4l8 1M8 10l6 6"/></g>
+    <ellipse cx="0" cy="-12" rx="7" ry="5.5" fill="#1f5b5a" stroke="#1b1420" stroke-width="2"/>
+    <path d="M-4 -16l-3-5M4 -16l3-5" stroke="#1b1420" stroke-width="1.8" stroke-linecap="round"/>
+    <ellipse cx="0" cy="4" rx="11.5" ry="13.5" fill="url(#p-scarabG)" stroke="#1b1420" stroke-width="2.2"/>
+    <path d="M0 -9v26" stroke="#123a3a" stroke-width="1.8"/>
+    <path d="M-6 -4q-3 6 -1 14" stroke="#c9fff2" stroke-width="2.2" fill="none" stroke-linecap="round" opacity=".6"/>
+    <circle cx="-2.6" cy="-13" r="1.5" fill="#fff"/><circle cx="2.6" cy="-13" r="1.5" fill="#fff"/>
+  </g>
+  <g id="p-owl" class="pet pet-owl">
+    <path d="M-8 22l-3 5M-4 22l0 5M4 22l0 5M8 22l3 5" stroke="#d98a2a" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M-16 -6Q-18 -20 -12 -24L-8 -16Q0 -20 8 -16L12 -24Q18 -20 16 -6Q20 14 0 24Q-20 14 -16 -6Z" fill="#8a5a36" stroke="#1b1420" stroke-width="2.3" stroke-linejoin="round"/>
+    <path d="M-10 4Q0 22 10 4Q8 18 0 22Q-8 18 -10 4Z" fill="#e8c9a0"/>
+    <path d="M-5 9l2 2l2-2M1 9l2 2l2-2M-2 14l2 2l2-2" stroke="#a87a4e" stroke-width="1.2" fill="none"/>
+    <circle cx="-7" cy="-6" r="7.5" fill="#f4e6cf" stroke="#1b1420" stroke-width="1.8"/><circle cx="7" cy="-6" r="7.5" fill="#f4e6cf" stroke="#1b1420" stroke-width="1.8"/>
+    <circle cx="-7" cy="-6" r="4.6" fill="#ff9a2a"/><circle cx="7" cy="-6" r="4.6" fill="#ff9a2a"/>
+    <circle cx="-7" cy="-6" r="2.6" fill="#1b1420"/><circle cx="7" cy="-6" r="2.6" fill="#1b1420"/>
+    <circle cx="-8" cy="-7.4" r="1" fill="#fff"/><circle cx="6" cy="-7.4" r="1" fill="#fff"/>
+    <path d="M-2.6 0h5.2l-2.6 5z" fill="#f2b33a" stroke="#1b1420" stroke-width="1.2" stroke-linejoin="round"/>
+    <path d="M-16 0Q-24 10 -14 16M16 0Q24 10 14 16" stroke="#6a4226" stroke-width="5" fill="none" stroke-linecap="round"/>
+  </g>
+  <g id="p-rat" class="pet pet-rat">
+    <path d="M10 16Q30 20 32 8Q34 0 28 -2" stroke="#1b1420" stroke-width="4.6" fill="none" stroke-linecap="round"/>
+    <path d="M10 16Q30 20 32 8Q34 0 28 -2" stroke="#e8a0b0" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+    <rect x="27" y="7" width="8" height="5" rx="1.6" fill="#f2c9a0" stroke="#1b1420" stroke-width="1.1" transform="rotate(70 31 9.5)"/>
+    <path d="M-12 18Q-16 4 -8 -4Q0 -8 8 -4Q16 4 12 18Z" fill="#9a97a8" stroke="#1b1420" stroke-width="2.2" stroke-linejoin="round"/>
+    <path d="M-6 18Q-6 8 0 6Q6 8 6 18Z" fill="#c7c4d2"/>
+    <circle cx="-9" cy="-14" r="6" fill="#9a97a8" stroke="#1b1420" stroke-width="2"/><circle cx="9" cy="-14" r="6" fill="#9a97a8" stroke="#1b1420" stroke-width="2"/>
+    <circle cx="-9" cy="-14" r="3.2" fill="#f3a7b8"/><circle cx="9" cy="-14" r="3.2" fill="#f3a7b8"/>
+    <path d="M-10 -6Q-10 -16 0 -16Q10 -16 10 -6Q8 4 0 6Q-8 4 -10 -6Z" fill="#a8a5b6" stroke="#1b1420" stroke-width="2.2" stroke-linejoin="round"/>
+    <circle cx="-4" cy="-7" r="2.2" fill="#1b1420"/><circle cx="4" cy="-7" r="2.2" fill="#1b1420"/>
+    <circle cx="-4.6" cy="-7.8" r=".8" fill="#fff"/><circle cx="3.4" cy="-7.8" r=".8" fill="#fff"/>
+    <ellipse cx="0" cy="0" rx="2.2" ry="1.6" fill="#f37a98"/>
+    <path d="M-3 0l-10-2M-3 2l-10 2M3 0l10-2M3 2l10 2" stroke="#5a5668" stroke-width=".8" stroke-linecap="round"/>
+    <path d="M-6 18v3M6 18v3" stroke="#e8a0b0" stroke-width="2.4" stroke-linecap="round"/>
+  </g>
+  <g id="p-parrot" class="pet pet-parrot">
+    <path d="M2 18L-2 40L4 38L6 42L10 22Z" fill="#2f7fd6" stroke="#1b1420" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M-12 4Q-14 -14 0 -18Q14 -18 14 -4Q16 14 6 22Q-8 24 -12 4Z" fill="#e8343f" stroke="#1b1420" stroke-width="2.3" stroke-linejoin="round"/>
+    <path d="M-12 2Q-16 14 -4 22Q2 14 0 4Z" fill="#ffc531" stroke="#1b1420" stroke-width="1.8" stroke-linejoin="round"/>
+    <path d="M-10 8Q-12 16 -4 20" stroke="#3fae5a" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <circle cx="2" cy="-8" r="5.5" fill="#fff" stroke="#1b1420" stroke-width="1.6"/>
+    <circle cx="3" cy="-8" r="2.8" fill="#1b1420"/><circle cx="2" cy="-9.2" r=".9" fill="#fff"/>
+    <path d="M10 -10Q20 -10 18 0Q15 -2 12 -1Z" fill="#3a3340" stroke="#1b1420" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M10 -10Q16 -9 17 -4" stroke="#8a8090" stroke-width="1.2" fill="none"/>
+    <path d="M-2 22v4M4 22v4" stroke="#6b5a7a" stroke-width="2.2" stroke-linecap="round"/>
+  </g>
+  <g id="p-crow" class="pet pet-crow">
+    <path d="M-14 6Q-18 -10 -4 -14Q8 -16 12 -6L22 -6L13 0Q16 12 4 16L-16 14Z" fill="#251c2c" stroke="#1b1420" stroke-width="2.2" stroke-linejoin="round"/>
+    <path d="M12 -6L22 -6L13 0Z" fill="#f2b33a" stroke="#1b1420" stroke-width="1.4" stroke-linejoin="round"/>
+    <path d="M-16 14L-26 18L-22 10Z" fill="#251c2c" stroke="#1b1420" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M-10 2Q-2 0 6 8" stroke="#4a3d55" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+    <circle cx="4" cy="-7" r="3.2" fill="#ffd23f"/><circle cx="4.6" cy="-7" r="1.4" fill="#1b1420"/>
+    <path d="M-2 16v5M4 16v5" stroke="#f2b33a" stroke-width="2" stroke-linecap="round"/>
+    <!-- ossinho no bico -->
+    <g transform="translate(22 -4) rotate(20)"><rect x="-2" y="-1.6" width="14" height="3.2" rx="1.4" fill="#f4efe6" stroke="#1b1420" stroke-width="1.1"/><circle cx="-2" cy="-1.6" r="2.2" fill="#f4efe6" stroke="#1b1420" stroke-width="1.1"/><circle cx="-2" cy="1.6" r="2.2" fill="#f4efe6" stroke="#1b1420" stroke-width="1.1"/><circle cx="12" cy="-1.6" r="2.2" fill="#f4efe6" stroke="#1b1420" stroke-width="1.1"/><circle cx="12" cy="1.6" r="2.2" fill="#f4efe6" stroke="#1b1420" stroke-width="1.1"/></g>
+  </g>
+  <radialGradient id="p-scarabG" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#5fe0c9"/><stop offset=".6" stop-color="#1f8f88"/><stop offset="1" stop-color="#0f4b4f"/></radialGradient>
+<symbol id="p-pen-bruxa" viewBox="-8 -64 252 304">
+  <ellipse cx="112" cy="230" rx="66" ry="7" fill="#000" opacity=".35"/>
+  <!-- capa atrás -->
+  <path d="M56 142Q38 176 32 218Q70 230 110 222Q150 230 188 218Q182 176 164 142Z" fill="url(#p-purple)" stroke="#1b1420" stroke-width="3.2" stroke-linejoin="round"/>
+  <path d="M48 170Q44 196 42 214M176 170Q180 196 182 214" stroke="#2a1747" stroke-width="2.4" fill="none" opacity=".7"/>
+  <!-- aba do chapéu, parte de trás -->
+  <ellipse cx="110" cy="44" rx="86" ry="17" fill="#2a1747" stroke="#1b1420" stroke-width="3.2"/>
+  <use href="#p-arm"/>
+  <g transform="translate(0 0)"><path d="M160 148Q178 151 188 160" stroke="#1b1420" stroke-width="22" stroke-linecap="round" fill="none"/><path d="M160 148Q178 151 188 160" stroke="url(#p-purple)" stroke-width="16" stroke-linecap="round" fill="none"/><path d="M184 152l8 12" stroke="#9be36a" stroke-width="6" stroke-linecap="round"/></g>
+  <use href="#p-bodyFill"/>
+  <g clip-path="url(#p-bodyClip)">
+    <!-- sombra do chapéu na cabeça -->
+    <ellipse cx="110" cy="58" rx="72" ry="12" fill="#2a1747" opacity=".35" filter="url(#p-soft)"/>
+    <!-- capa caindo pelos ombros, com forro verde -->
+    <path d="M30 140Q66 148 78 152Q66 186 64 230L30 230Z" fill="url(#p-purple)"/>
+    <path d="M190 140Q154 148 142 152Q154 186 156 230L190 230Z" fill="url(#p-purple)"/>
+    <path d="M78 152Q66 186 64 230L72 230Q72 190 84 154Z" fill="#9be36a"/>
+    <path d="M142 152Q154 186 156 230L148 230Q148 190 136 154Z" fill="#9be36a"/>
+    <path d="M52 170Q58 196 58 222M168 170Q162 196 162 222" stroke="#2a1747" stroke-width="2.2" fill="none" opacity=".6"/>
+    <!-- sombra da gola -->
+    <path d="M30 160Q110 196 190 160L190 176Q110 210 30 176Z" fill="#2a1747" opacity=".3" filter="url(#p-soft)"/>
+    <!-- gola -->
+    <path d="M30 138Q110 176 190 138L190 154Q110 192 30 154Z" fill="url(#p-purpleD)"/>
+    <path d="M30 154Q110 192 190 154" stroke="#1b1420" stroke-width="2.4" fill="none"/>
+    <path d="M40 146Q110 180 180 146" stroke="#9a78d8" stroke-width="1.6" fill="none" opacity=".7"/>
+  </g>
+  <use href="#p-bodyLine"/>
+  <use href="#p-face"/>
+  <!-- broche de lua -->
+  <circle cx="110" cy="172" r="10.5" fill="url(#p-gold)" stroke="#1b1420" stroke-width="2.4"/>
+  <path d="M113.5 164.5a8 8 0 1 0 0 15a6.2 6.2 0 1 1 0-15z" fill="#3b2364"/>
+  <use href="#p-hand"/>
+  <use href="#p-lanternAt"/>
+  <!-- chapéu: cone com dobras e bico torto -->
+  <path d="M72 40Q86 4 104 -24Q112 -40 134 -42Q122 -30 125 -14Q130 12 148 40Z" fill="url(#p-purple)" stroke="#1b1420" stroke-width="3.4" stroke-linejoin="round"/>
+  <path d="M98 -8Q106 10 104 34M120 -26Q114 -12 118 4" stroke="#2a1747" stroke-width="2.2" fill="none" opacity=".75"/>
+  <path d="M88 20Q94 6 102 -8" stroke="#b394ea" stroke-width="3" fill="none" stroke-linecap="round" opacity=".7"/>
+  <path d="M76 28Q110 40 144 28L148 40Q110 54 72 40Z" fill="#2a1747" stroke="#1b1420" stroke-width="2.6" stroke-linejoin="round"/>
+  <g fill="#ffd36b" stroke="#a8761a" stroke-width=".6"><path d="M92 33l1.5 3l3.3.5l-2.4 2.3l.6 3.3l-3-1.6l-3 1.6l.6-3.3l-2.4-2.3l3.3-.5z"/><path d="M110 36l1.5 3l3.3.5l-2.4 2.3l.6 3.3l-3-1.6l-3 1.6l.6-3.3l-2.4-2.3l3.3-.5z"/><path d="M128 33l1.5 3l3.3.5l-2.4 2.3l.6 3.3l-3-1.6l-3 1.6l.6-3.3l-2.4-2.3l3.3-.5z"/></g>
+  <!-- aba da frente, por cima da cabeça -->
+  <path d="M24 44C26 64 194 64 196 44C188 54 32 54 24 44Z" fill="url(#p-purpleD)" stroke="#1b1420" stroke-width="3.2" stroke-linejoin="round"/>
+  <path d="M40 50Q110 64 180 50" stroke="#9a78d8" stroke-width="1.8" fill="none" opacity=".6"/>
+  <!-- gatinho sentado na aba -->
+  <g transform="translate(150 6) scale(.95)"><use href="#p-cat"/></g>
+</symbol>
+<symbol id="p-pen-vampiro" viewBox="-8 -64 252 304">
+  <ellipse cx="112" cy="230" rx="66" ry="7" fill="#000" opacity=".35"/>
+  <!-- capa atrás com gola alta em pé -->
+  <path d="M48 140L18 70Q42 92 66 100L72 132ZM172 140L202 70Q178 92 154 100L148 132Z" fill="url(#p-wineD)" stroke="#1b1420" stroke-width="3.2" stroke-linejoin="round"/>
+  <path d="M50 134L27 82Q46 98 64 104L68 130ZM170 134L193 82Q174 98 156 104L152 130Z" fill="url(#p-orangeL)"/>
+  <path d="M44 146Q26 184 22 222Q66 232 110 226Q154 232 198 222Q194 184 176 146Z" fill="url(#p-wine)" stroke="#1b1420" stroke-width="3.2" stroke-linejoin="round"/>
+  <path d="M44 146Q26 184 22 222Q66 232 110 226Q154 232 198 222Q194 184 176 146Z" fill="url(#p-velvet)"/>
+  <use href="#p-arm"/>
+  <g><path d="M160 148Q178 151 188 160" stroke="#1b1420" stroke-width="22" stroke-linecap="round" fill="none"/><path d="M160 148Q178 151 188 160" stroke="url(#p-wine)" stroke-width="16" stroke-linecap="round" fill="none"/><path d="M184 152l8 12" stroke="#ffbd6a" stroke-width="6" stroke-linecap="round"/></g>
+  <use href="#p-bodyFill"/>
+  <g clip-path="url(#p-bodyClip)">
+    <!-- colete -->
+    <path d="M60 156L96 156L110 186L124 156L160 156L170 200Q110 212 50 200Z" fill="#3a0e1d"/>
+    <path d="M60 156L96 156L110 186L124 156L160 156L170 200Q110 212 50 200Z" fill="url(#p-velvet)"/>
+    <path d="M96 156L110 186L124 156" stroke="#1b1420" stroke-width="2.4" fill="none"/>
+    <path d="M50 200Q110 212 170 200" stroke="#1b1420" stroke-width="2.4" fill="none"/>
+    <!-- capa caindo pelos ombros -->
+    <path d="M28 136Q64 144 82 150Q72 190 70 232L28 232Z" fill="url(#p-wine)"/>
+    <path d="M192 136Q156 144 138 150Q148 190 150 232L192 232Z" fill="url(#p-wine)"/>
+    <path d="M28 136Q64 144 82 150Q72 190 70 232L28 232Z M192 136Q156 144 138 150Q148 190 150 232L192 232Z" fill="url(#p-velvet)"/>
+    <path d="M82 150Q72 190 70 232L78 232Q78 192 88 152Z" fill="url(#p-orangeL)"/>
+    <path d="M138 150Q148 190 150 232L142 232Q142 192 132 152Z" fill="url(#p-orangeL)"/>
+    <path d="M82 150Q72 190 70 232M138 150Q148 190 150 232" stroke="#1b1420" stroke-width="2.4" fill="none"/>
+    <path d="M52 172Q58 200 56 226M168 172Q162 200 164 226" stroke="#2c0814" stroke-width="2.4" fill="none" opacity=".7"/>
+    <!-- sombra da capa nos ombros -->
+    <path d="M28 128Q110 160 192 128L192 142Q110 176 28 142Z" fill="#2c0814" opacity=".3" filter="url(#p-soft)"/>
+  </g>
+  <use href="#p-bodyLine"/>
+  <use href="#p-eyeL"/><use href="#p-eyeR"/><use href="#p-cheeks"/>
+  <!-- boquinha com dentinhos -->
+  <path d="M101 129Q110 138 119 129Q110 143 101 129Z" fill="#1b1420"/>
+  <path d="M104 130.5l2 5.5l2.1-4.8ZM111.9 131.2l2.1 4.8l2-5.5Z" fill="#fff"/>
+  <!-- corrente que prende a capa -->
+  <path d="M84 152Q110 162 136 152" stroke="url(#p-gold)" stroke-width="2.4" fill="none" stroke-dasharray="3 2"/>
+  <circle cx="84" cy="152" r="5" fill="url(#p-gold)" stroke="#1b1420" stroke-width="2"/><circle cx="136" cy="152" r="5" fill="url(#p-gold)" stroke="#1b1420" stroke-width="2"/>
+  <!-- botões, bolso e folhinha SEXTA 13 -->
+  <circle cx="110" cy="194" r="2.6" fill="url(#p-gold)" stroke="#1b1420" stroke-width="1"/>
+  <path d="M116 176h16v8h-16z" fill="#2a0712" stroke="#1b1420" stroke-width="1.6"/>
+  <g transform="translate(118 158) rotate(9)"><rect width="15" height="18" rx="2" fill="#fff6e6" stroke="#1b1420" stroke-width="1.5"/><rect width="15" height="5" rx="2" fill="#ff5469"/><text x="7.5" y="15.4" font-family="Arial Black,Arial" font-size="8.6" font-weight="900" text-anchor="middle" fill="#1b1420">13</text></g>
+  <!-- medalhão de abóbora -->
+  <path d="M92 156Q96 168 98 176" stroke="url(#p-gold)" stroke-width="1.8" fill="none"/>
+  <g transform="translate(97 182)"><circle r="8.5" fill="url(#p-gold)" stroke="#1b1420" stroke-width="2"/><ellipse rx="5" ry="4.2" fill="#ff8a2a"/><path d="M-1.7 -3.8v7.6M1.7 -3.8v7.6" stroke="#c45a10" stroke-width="1"/><path d="M0 -4.2l1.2 -2.3" stroke="#5aa042" stroke-width="1.5" stroke-linecap="round"/></g>
+  <!-- broche 13 na capa -->
+  <g transform="translate(52 160)"><circle r="10" fill="#1b1420" stroke="url(#p-gold)" stroke-width="2.6"/><text x="0" y="4.2" font-family="Arial Black,Arial" font-size="11" font-weight="900" text-anchor="middle" fill="#ffd36b">13</text></g>
+  <use href="#p-hand"/>
+  <use href="#p-lanternAt"/>
+  <g transform="translate(38 46) rotate(-10) scale(1.05)"><use href="#p-bat"/></g>
+</symbol>
+<symbol id="p-pen-mumia" viewBox="-8 -64 252 304">
+  <defs><mask id="p-faceHole"><rect x="0" y="-80" width="240" height="320" fill="#fff"/><ellipse cx="110" cy="114" rx="56" ry="30" fill="#000"/></mask></defs>
+  <ellipse cx="112" cy="230" rx="66" ry="7" fill="#000" opacity=".35"/>
+  <!-- ponta solta de faixa -->
+  <path d="M52 176Q30 186 26 210Q22 222 30 230" stroke="#1b1420" stroke-width="13" fill="none" stroke-linecap="round"/>
+  <path d="M52 176Q30 186 26 210Q22 222 30 230" stroke="url(#p-bandage)" stroke-width="8.5" fill="none" stroke-linecap="round"/>
+  <use href="#p-arm"/>
+  <path d="M166 146L190 166M172 150l-2 12M180 154l-3 12" stroke="#c9b892" stroke-width="2" stroke-linecap="round"/>
+  <use href="#p-bodyFill"/>
+  <g clip-path="url(#p-bodyClip)">
+    <g mask="url(#p-faceHole)">
+      <g stroke="#b9a67e" stroke-width="1.4">
+        <path d="M30 46L190 26L190 44L30 64Z" fill="url(#p-bandage)"/>
+        <path d="M30 66L190 52L190 70L30 84Z" fill="url(#p-bandage)"/>
+        <path d="M30 140L190 120L190 140L30 160Z" fill="url(#p-bandage)"/>
+        <path d="M30 160L190 146L190 166L30 180Z" fill="url(#p-bandage)"/>
+        <path d="M30 176L190 172L190 192L30 196Z" fill="url(#p-bandage)"/>
+        <path d="M30 198L190 188L190 210L30 220Z" fill="url(#p-bandage)"/>
+        <path d="M30 86L190 96L190 112L30 102Z" fill="url(#p-bandage)"/>
+      </g>
+      <g stroke="#c9b892" stroke-width="1" opacity=".8"><path d="M60 54l4 6M120 46l3 6M150 140l3 6M80 168l3 6M140 182l3 6M70 206l3 6"/></g>
+    </g>
+    <ellipse cx="110" cy="114" rx="57" ry="31" fill="none" stroke="#8a7650" stroke-opacity=".28" stroke-width="3" filter="url(#p-soft2)"/>
+  </g>
+  <use href="#p-bodyLine"/>
+  <use href="#p-eyeL"/><use href="#p-eyeR"/><use href="#p-cheeks"/>
+  <ellipse cx="110" cy="133" rx="5" ry="6" fill="#1b1420"/>
+  <!-- etiqueta 13 amarrada numa faixa -->
+  <path d="M150 150L160 164" stroke="#8a6a3a" stroke-width="1.4"/>
+  <g transform="translate(152 162) rotate(-14)"><path d="M0 0h20l6 7l-6 7h-20z" fill="#e9d3a2" stroke="#1b1420" stroke-width="1.6"/><text x="10" y="10.6" font-family="Arial Black,Arial" font-size="9" font-weight="900" text-anchor="middle" fill="#7a1f1f">13</text></g>
+  <use href="#p-hand"/>
+  <use href="#p-lanternAt"/>
+  <g transform="translate(72 168) rotate(-28) scale(1.05)"><use href="#p-scarab"/></g>
+</symbol>
+<symbol id="p-pen-abobora" viewBox="-8 -64 252 304">
+  <defs>
+    <mask id="p-hoodHole"><rect x="-10" y="-80" width="260" height="330" fill="#fff"/><ellipse cx="110" cy="112" rx="54" ry="40" fill="#000"/></mask>
+    <clipPath id="p-suitClip"><path d="M20 -10H200V194Q110 206 20 194Z"/></clipPath>
+  </defs>
+  <ellipse cx="112" cy="230" rx="66" ry="7" fill="#000" opacity=".35"/>
+  <!-- braço com manga laranja -->
+  <use href="#p-arm"/>
+  <g><path d="M160 148Q178 151 188 160" stroke="#1b1420" stroke-width="22" stroke-linecap="round" fill="none"/><path d="M160 148Q178 151 188 160" stroke="url(#p-pumpkin)" stroke-width="16" stroke-linecap="round" fill="none"/><path d="M184 152l8 12" stroke="#5aa042" stroke-width="6" stroke-linecap="round"/></g>
+  <use href="#p-bodyFill"/>
+  <g clip-path="url(#p-bodyClip)">
+    <g clip-path="url(#p-suitClip)" mask="url(#p-hoodHole)">
+      <rect x="20" y="-10" width="180" height="220" fill="url(#p-pumpkin)"/>
+      <!-- gomos da abóbora acompanhando o corpo -->
+      <g stroke="#b84e0c" stroke-width="2.6" fill="none" opacity=".9">
+        <path d="M74 40C54 80 54 160 68 200"/><path d="M146 40C166 80 166 160 152 200"/>
+        <path d="M94 32C82 80 84 160 92 204"/><path d="M126 32C138 80 136 160 128 204"/>
+      </g>
+      <g stroke="#ffd08a" stroke-width="5" fill="none" opacity=".35" stroke-linecap="round"><path d="M60 70C54 100 54 130 58 150"/><path d="M84 44C80 60 78 76 78 86"/></g>
+      <!-- sombra dentro do capuz -->
+      <ellipse cx="110" cy="112" rx="58" ry="44" fill="none" stroke="#6a2a04" stroke-width="10" opacity=".45" filter="url(#p-soft)"/>
+    </g>
+    <!-- barra verde do macacão -->
+    <path d="M20 192Q110 204 200 192" stroke="#1b1420" stroke-width="9" fill="none"/>
+    <path d="M20 192Q110 204 200 192" stroke="#5aa042" stroke-width="5.5" fill="none"/>
+  </g>
+  <!-- borda do capuz em volta do rosto -->
+  <ellipse cx="110" cy="112" rx="54" ry="40" fill="none" stroke="#1b1420" stroke-width="7"/>
+  <ellipse cx="110" cy="112" rx="54" ry="40" fill="none" stroke="#d9661a" stroke-width="3.5"/>
+  <use href="#p-bodyLine"/>
+  <use href="#p-face"/>
+  <!-- carinha recortada na barriga -->
+  <g transform="translate(0 2)">
+    <path d="M94 168l7-9l7 9z M112 168l7-9l7 9z" fill="#4a1d02"/>
+    <path d="M94 168l7-9l7 9z M112 168l7-9l7 9z" fill="#ffcf5a" opacity=".3"/>
+    <path d="M92 178q18 12 36 0l-5 4l-4-4l-5 5l-4-5l-5 5l-4-4z" fill="#4a1d02"/>
+  </g>
+  <!-- cabinho no capuz com folha e gavinha -->
+  <path d="M104 34Q100 16 112 8Q119 6 121 12Q112 18 115 34Z" fill="#5a8a2c" stroke="#1b1420" stroke-width="2.8" stroke-linejoin="round"/>
+  <path d="M96 28Q82 14 70 24Q82 36 96 28Z" fill="url(#p-leaf)" stroke="#1b1420" stroke-width="2.2" stroke-linejoin="round"/>
+  <path d="M96 28Q84 24 74 24" stroke="#2f6a1f" stroke-width="1.4" fill="none"/>
+  <use href="#p-hand"/>
+  <use href="#p-lanternAt"/>
+  <g transform="translate(140 9) scale(1.05)"><use href="#p-owl"/></g>
+</symbol>
+<symbol id="p-pen-zumbi" viewBox="-8 -64 252 304">
+  <ellipse cx="112" cy="230" rx="66" ry="7" fill="#000" opacity=".35"/>
+  <!-- etiqueta 13 pendurada no braço -->
+  <use href="#p-arm"/>
+  <use href="#p-bodyFill"/>
+  <g clip-path="url(#p-bodyClip)">
+    <!-- pele esverdeada de zumbi -->
+    <use href="#p-B" fill="#8fbf7a" opacity=".38"/>
+    <ellipse cx="72" cy="70" rx="12" ry="8" fill="#6d9a5c" opacity=".35"/>
+    <ellipse cx="150" cy="150" rx="10" ry="6" fill="#6d9a5c" opacity=".35"/>
+    <!-- camisa rasgada -->
+    <path d="M24 150Q110 140 196 150L196 194L184 186L176 198L164 188L154 200L142 190L130 202L118 190L106 202L94 190L82 200L70 188L58 198L46 186L34 196L24 188Z" fill="#7d8790"/>
+    <path d="M24 150Q110 140 196 150L196 194L184 186L176 198L164 188L154 200L142 190L130 202L118 190L106 202L94 190L82 200L70 188L58 198L46 186L34 196L24 188Z" fill="url(#p-weave)"/>
+    <path d="M24 150Q110 140 196 150" stroke="#1b1420" stroke-width="2.4" fill="none"/>
+    <path d="M196 194L184 186L176 198L164 188L154 200L142 190L130 202L118 190L106 202L94 190L82 200L70 188L58 198L46 186L34 196L24 188" stroke="#1b1420" stroke-width="2.2" fill="none" stroke-linejoin="round"/>
+    <!-- buracos e remendo na camisa -->
+    <path d="M66 166q6-6 12 0q-2 8-12 0z" fill="#e7f0dd" stroke="#1b1420" stroke-width="1.6"/>
+    <path d="M138 160q8-4 12 4q-6 6-12-4z" fill="#e7f0dd" stroke="#1b1420" stroke-width="1.6"/>
+    <path d="M24 158Q110 152 196 158" stroke="#4f5860" stroke-width="5" opacity=".35" filter="url(#p-soft2)"/>
+    <!-- sombra embaixo dos olhos -->
+    <ellipse cx="88" cy="126" rx="15" ry="5" fill="#4d6b42" opacity=".35" filter="url(#p-soft2)"/>
+    <ellipse cx="132" cy="126" rx="15" ry="5" fill="#4d6b42" opacity=".35" filter="url(#p-soft2)"/>
+  </g>
+  <use href="#p-bodyLine"/>
+  <!-- olhos: um bem aberto, outro de pálpebra caída -->
+  <use href="#p-eyeL"/>
+  <use href="#p-eyeR"/>
+  <path d="M116 100Q132 84 148 100L148 104Q132 96 116 104Z" fill="#c9dcbf" stroke="#1b1420" stroke-width="2.4" stroke-linejoin="round"/>
+  <ellipse cx="71" cy="130" rx="8" ry="4.5" fill="#ff8fab" opacity=".35"/>
+  <!-- boca torta com um dentinho -->
+  <path d="M100 136Q110 130 122 138" stroke="#1b1420" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M112 134.5l2 4.5l2.4-3.7Z" fill="#fff" stroke="#1b1420" stroke-width="1"/>
+  <!-- costura na cabeça -->
+  <path d="M66 58Q82 44 102 46" stroke="#4d3a52" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+  <path d="M70 50l4 8M78 46l3 8M86 44l2 8M94 43l1 8" stroke="#4d3a52" stroke-width="1.8" stroke-linecap="round"/>
+  <!-- curativo cruzado na bochecha -->
+  <g transform="translate(150 128) rotate(-20)"><rect x="-10" y="-3.5" width="20" height="7" rx="3" fill="#f2c9a0" stroke="#1b1420" stroke-width="1.4"/><rect x="-3.5" y="-10" width="7" height="20" rx="3" fill="#f2c9a0" stroke="#1b1420" stroke-width="1.4"/><circle r="1" fill="#c89670"/></g>
+  <use href="#p-hand"/>
+  <path d="M190 168L182 186" stroke="#8a6a3a" stroke-width="1.4"/>
+  <g transform="translate(170 184) rotate(-8)"><path d="M0 0h20l6 7l-6 7h-20z" fill="#e9d3a2" stroke="#1b1420" stroke-width="1.6"/><circle cx="21" cy="7" r="1.6" fill="#1b1420"/><text x="10" y="10.6" font-family="Arial Black,Arial" font-size="9" font-weight="900" text-anchor="middle" fill="#7a1f1f">13</text></g>
+  <use href="#p-lanternAt"/>
+  <ellipse cx="34" cy="231" rx="16" ry="3.5" fill="#000" opacity=".35"/>
+  <g transform="translate(30 207) scale(1.05)"><use href="#p-rat"/></g>
+</symbol>
+<symbol id="p-pen-pirata" viewBox="-8 -64 252 304">
+  <ellipse cx="112" cy="230" rx="66" ry="7" fill="#000" opacity=".35"/>
+  <!-- pontas do lenço -->
+  <path d="M46 70Q24 80 22 100Q34 92 44 92Q38 104 40 116Q50 98 58 84Z" fill="url(#p-red)" stroke="#1b1420" stroke-width="2.8" stroke-linejoin="round"/>
+  <use href="#p-arm"/>
+  <use href="#p-bodyFill"/>
+  <g clip-path="url(#p-bodyClip)">
+    <!-- lenço na cabeça -->
+    <path d="M30 30Q110 -6 190 30L190 72Q110 46 30 72Z" fill="url(#p-red)"/>
+    <path d="M30 30Q110 -6 190 30L190 72Q110 46 30 72Z" fill="url(#p-dots)" opacity=".85"/>
+    <path d="M30 72Q110 46 190 72" stroke="#1b1420" stroke-width="2.6" fill="none"/>
+    <path d="M30 80Q110 54 190 80" stroke="#7a1020" stroke-width="5" fill="none" opacity=".25" filter="url(#p-soft2)"/>
+    <!-- colete -->
+    <path d="M30 150L92 150L104 196L30 196ZM190 150L128 150L116 196L190 196Z" fill="url(#p-brown)"/>
+    <path d="M92 150L104 196M128 150L116 196" stroke="#1b1420" stroke-width="2.4" fill="none"/>
+    <!-- faixa de cintura -->
+    <path d="M30 192Q110 184 190 192L190 210Q110 202 30 210Z" fill="url(#p-red)" stroke="#1b1420" stroke-width="2.4"/>
+    <path d="M30 150Q110 170 190 150L190 162Q110 184 30 162Z" fill="#000" opacity=".12" filter="url(#p-soft)"/>
+  </g>
+  <use href="#p-bodyLine"/>
+  <!-- tapa-olho no olho direito -->
+  <use href="#p-eyeL"/><use href="#p-cheeks"/>
+  <path d="M60 70L164 132" stroke="#1b1420" stroke-width="3.4" stroke-linecap="round"/>
+  <ellipse cx="132" cy="108" rx="15" ry="13" fill="#1b1420"/>
+  <ellipse cx="128" cy="104" rx="5" ry="3" fill="#5a4a6a" opacity=".6"/>
+  <path d="M104 130Q112 138 120 130" stroke="#1b1420" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <!-- caveirinha no lenço -->
+  <g transform="translate(96 22)"><path d="M8 0C3 0 0 3 0 7C0 10 2 12 4 12V15H12V12C14 12 16 10 16 7C16 3 13 0 8 0Z" fill="#fff6e6" stroke="#1b1420" stroke-width="1.4"/><circle cx="5" cy="7" r="2" fill="#1b1420"/><circle cx="11" cy="7" r="2" fill="#1b1420"/><path d="M-4 18L20 6M-4 6L20 18" stroke="#fff6e6" stroke-width="2.2" stroke-linecap="round"/></g>
+  <!-- botões e moeda 13 -->
+  <circle cx="86" cy="164" r="2.8" fill="url(#p-gold)" stroke="#1b1420" stroke-width="1.2"/><circle cx="90" cy="178" r="2.8" fill="url(#p-gold)" stroke="#1b1420" stroke-width="1.2"/>
+  <g transform="translate(128 200)"><circle r="9" fill="url(#p-gold)" stroke="#1b1420" stroke-width="2"/><circle r="6" fill="none" stroke="#a8761a" stroke-width="1"/><text x="0" y="3.5" font-family="Arial Black,Arial" font-size="8.5" font-weight="900" text-anchor="middle" fill="#7a4d10">13</text></g>
+  <use href="#p-hand"/>
+  <use href="#p-lanternAt"/>
+  <g transform="translate(174 120) scale(1.05)"><use href="#p-parrot"/></g>
+</symbol>
+<symbol id="p-pen-esqueleto" viewBox="-8 -64 252 304">
+  <defs>
+    <mask id="p-hoodHole2"><rect x="-10" y="-80" width="260" height="330" fill="#fff"/><ellipse cx="110" cy="112" rx="54" ry="40" fill="#000"/></mask>
+    <clipPath id="p-suitClip2"><path d="M20 -10H200V198Q110 210 20 198Z"/></clipPath>
+    <linearGradient id="p-blackSuit" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3a3044"/><stop offset="1" stop-color="#15101a"/></linearGradient>
+  </defs>
+  <ellipse cx="112" cy="230" rx="66" ry="7" fill="#000" opacity=".35"/>
+  <use href="#p-arm"/>
+  <g><path d="M160 148Q178 151 188 160" stroke="#1b1420" stroke-width="22" stroke-linecap="round" fill="none"/><path d="M160 148Q178 151 188 160" stroke="url(#p-blackSuit)" stroke-width="16" stroke-linecap="round" fill="none"/><path d="M164 150Q176 152 184 158" stroke="#f4efe6" stroke-width="4" stroke-linecap="round" fill="none"/></g>
+  <use href="#p-bodyFill"/>
+  <g clip-path="url(#p-bodyClip)">
+    <g clip-path="url(#p-suitClip2)" mask="url(#p-hoodHole2)">
+      <rect x="20" y="-10" width="180" height="220" fill="url(#p-blackSuit)"/>
+      <ellipse cx="110" cy="112" rx="58" ry="44" fill="none" stroke="#000" stroke-width="10" opacity=".5" filter="url(#p-soft)"/>
+      <path d="M70 46Q78 38 90 36" stroke="#5a4c68" stroke-width="4" fill="none" stroke-linecap="round" opacity=".7"/>
+      <!-- costelas, esterno, coluna e bacia estampados -->
+      <g fill="#f4efe6" stroke="#1b1420" stroke-width="1.6" stroke-linejoin="round">
+        <rect x="105" y="156" width="10" height="34" rx="4"/>
+        <path d="M104 160Q84 156 74 166Q86 164 104 168Z"/><path d="M116 160Q136 156 146 166Q134 164 116 168Z"/>
+        <path d="M104 170Q82 166 70 178Q84 175 104 178Z"/><path d="M116 170Q138 166 150 178Q136 175 116 178Z"/>
+        <path d="M104 180Q84 178 74 188Q86 186 104 188Z"/><path d="M116 180Q136 178 146 188Q134 186 116 188Z"/>
+        <path d="M92 192Q110 186 128 192Q130 200 120 202Q110 196 100 202Q90 200 92 192Z"/>
+      </g>
+    </g>
+    <path d="M20 196Q110 208 200 196" stroke="#1b1420" stroke-width="9" fill="none"/>
+    <path d="M20 196Q110 208 200 196" stroke="#f4efe6" stroke-width="4" fill="none"/>
+  </g>
+  <!-- borda do capuz -->
+  <ellipse cx="110" cy="112" rx="54" ry="40" fill="none" stroke="#1b1420" stroke-width="7"/>
+  <ellipse cx="110" cy="112" rx="54" ry="40" fill="none" stroke="#f4efe6" stroke-width="3"/>
+  <use href="#p-bodyLine"/>
+  <!-- rosto de caveirinha fofa -->
+  <use href="#p-eyeL"/><use href="#p-eyeR"/><use href="#p-cheeks"/>
+  <path d="M110 124l-4 6h8z" fill="#1b1420"/>
+  <path d="M96 136Q110 142 124 136" stroke="#1b1420" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+  <path d="M101 134.5v5M106 136v5M111 136.4v5M116 136v5M121 134.5v5" stroke="#1b1420" stroke-width="1.6" stroke-linecap="round"/>
+  <!-- broche 13 em forma de osso -->
+  <g transform="translate(64 156) rotate(-15)"><rect x="-10" y="-6" width="20" height="12" rx="5" fill="#f4efe6" stroke="#1b1420" stroke-width="1.8"/><text x="0" y="4" font-family="Arial Black,Arial" font-size="9" font-weight="900" text-anchor="middle" fill="#1b1420">13</text></g>
+  <use href="#p-hand"/>
+  <use href="#p-lanternAt"/>
+  <g transform="translate(86 16) scale(1.15)"><use href="#p-crow"/></g>
+</symbol>
+</defs></svg>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
-    <radialGradient id="gBody" cx="40%" cy="30%" r="80%"><stop offset="0" stop-color="#ffffff"/><stop offset=".7" stop-color="#ece6f2"/><stop offset="1" stop-color="#cfc6da"/></radialGradient>
-    <radialGradient id="gFlame" cx="50%" cy="60%" r="60%"><stop offset="0" stop-color="#fff6c8"/><stop offset=".45" stop-color="#ffc24a"/><stop offset="1" stop-color="#ff7a1a" stop-opacity="0"/></radialGradient>
-    <!-- Penumbra: o fantasminha da Sessão de Série (personagem original), versão boneco costurado à mão -->
-    <pattern id="pTweed" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(35)"><path d="M0 3h6" stroke="#000" stroke-opacity=".18" stroke-width="1.2"/><path d="M3 0v2" stroke="#fff" stroke-opacity=".06" stroke-width="1"/></pattern>
-    <pattern id="pLinen" width="5" height="5" patternUnits="userSpaceOnUse"><path d="M0 2.5h5M2.5 0v5" stroke="#6e5f80" stroke-opacity=".08" stroke-width=".8"/></pattern>
-    <linearGradient id="gCoat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7d2440"/><stop offset="1" stop-color="#4a1326"/></linearGradient>
-    <symbol id="penumbra" viewBox="0 0 170 190">
-      <ellipse cx="80" cy="183" rx="44" ry="5" fill="#000" opacity=".28"/>
-      <!-- corpo de lençol, com a barra rasgada -->
-      <path d="M80 6C55 6 42 27 42 56L39 150L47 165L56 152L64 170L73 155L81 171L90 156L98 168L106 153L113 164L121 149L118 56C118 27 105 6 80 6Z" fill="url(#gBody)"/>
-      <path d="M80 6C55 6 42 27 42 56L39 150L47 165L56 152L64 170L73 155L81 171L90 156L98 168L106 153L113 164L121 149L118 56C118 27 105 6 80 6Z" fill="url(#pLinen)"/>
-      <!-- costura na cabeça -->
-      <path d="M52 30q8-12 22-14" stroke="#9c8fab" stroke-width="1.6" stroke-dasharray="3 3" fill="none" stroke-linecap="round"/>
-      <path d="M53 27l2 5M58 22l3 4M64 18l2 5M70 16l1 5" stroke="#9c8fab" stroke-width="1.2" stroke-linecap="round"/>
-      <!-- rosto: olhos de tamanhos diferentes, boquinha de susto -->
-      <ellipse cx="67" cy="46" rx="7" ry="9" fill="#1b1420"/><ellipse cx="93" cy="44" rx="9.5" ry="11.5" fill="#1b1420"/>
-      <circle cx="69.5" cy="42" r="2.4" fill="#fff"/><circle cx="96" cy="39.5" r="3" fill="#fff"/>
-      <ellipse cx="81" cy="64" rx="4" ry="5.2" fill="#1b1420"/>
-      <ellipse cx="57" cy="58" rx="5.5" ry="3" fill="#ff9fb4" opacity=".5"/><ellipse cx="105" cy="57" rx="5.5" ry="3" fill="#ff9fb4" opacity=".5"/>
-      <!-- sobretudo cor de vinho, aberto na frente -->
-      <path d="M62 80Q49 83 44 98L35 156Q51 163 72 158L77 100Z" fill="url(#gCoat)"/>
-      <path d="M98 80Q111 83 116 98L125 156Q109 163 88 158L83 100Z" fill="url(#gCoat)"/>
-      <path d="M62 80Q49 83 44 98L35 156Q51 163 72 158L77 100Z" fill="url(#pTweed)"/>
-      <path d="M98 80Q111 83 116 98L125 156Q109 163 88 158L83 100Z" fill="url(#pTweed)"/>
-      <!-- lapelas -->
-      <path d="M62 80L77 100L70 104L60 88Z" fill="#3a0e1d"/><path d="M98 80L83 100L90 104L100 88Z" fill="#3a0e1d"/>
-      <!-- pesponto nas bordas -->
-      <path d="M45 101L37 153M115 101L123 153M38 156Q52 160 70 156M122 156Q108 160 90 156" stroke="#d98aa0" stroke-opacity=".55" stroke-width="1.1" stroke-dasharray="2.5 3" fill="none"/>
-      <!-- remendo no casaco -->
-      <rect x="44" y="128" width="14" height="12" rx="1.5" fill="#5c6b3a" transform="rotate(-8 51 134)"/>
-      <path d="M45 128l1 2m3-2l1 2m3-2l1 2m3-2l1 2M45 140l1 2m3-2l1 2m3-2l1 2m3-2l1 2" stroke="#e8d9b0" stroke-width="1" stroke-linecap="round" transform="rotate(-8 51 134)"/>
-      <!-- botões de abóbora -->
-      <g transform="translate(72 112)"><ellipse rx="4.6" ry="4" fill="#ff8a2a"/><path d="M-1.6 -3.6v7.2M1.6 -3.6v7.2" stroke="#c45a10" stroke-width=".9"/><path d="M0 -4l1.2 -2.4" stroke="#5aa042" stroke-width="1.4" stroke-linecap="round"/></g>
-      <g transform="translate(71 127)"><ellipse rx="4.6" ry="4" fill="#ff8a2a"/><path d="M-1.6 -3.6v7.2M1.6 -3.6v7.2" stroke="#c45a10" stroke-width=".9"/><path d="M0 -4l1.2 -2.4" stroke="#5aa042" stroke-width="1.4" stroke-linecap="round"/></g>
-      <g transform="translate(70 142)"><ellipse rx="4.6" ry="4" fill="#ff8a2a"/><path d="M-1.6 -3.6v7.2M1.6 -3.6v7.2" stroke="#c45a10" stroke-width=".9"/><path d="M0 -4l1.2 -2.4" stroke="#5aa042" stroke-width="1.4" stroke-linecap="round"/></g>
-      <!-- florzinha seca na lapela -->
-      <g transform="translate(104 93)"><circle r="2.2" fill="#ffd36b"/><g fill="#9b7bd1"><ellipse cx="0" cy="-5" rx="2.4" ry="3.6"/><ellipse cx="4.8" cy="-1.5" rx="2.4" ry="3.6" transform="rotate(72 4.8 -1.5)"/><ellipse cx="3" cy="4.2" rx="2.4" ry="3.6" transform="rotate(144 3 4.2)"/><ellipse cx="-3" cy="4.2" rx="2.4" ry="3.6" transform="rotate(216 -3 4.2)"/><ellipse cx="-4.8" cy="-1.5" rx="2.4" ry="3.6" transform="rotate(288 -4.8 -1.5)"/></g></g>
-      <!-- braço esquerdo caído -->
-      <path d="M46 96Q36 118 34 134" stroke="url(#gCoat)" stroke-width="11" stroke-linecap="round" fill="none"/>
-      <path d="M31 132q3 7 8 3" stroke="#3a0e1d" stroke-width="6" stroke-linecap="round" fill="none"/>
-      <path d="M33 138q-3 7 3 8q5-1 4-7" fill="#ece6f2"/>
-      <!-- braço direito segurando a lanterna -->
-      <path d="M113 94Q130 98 143 108" stroke="url(#gCoat)" stroke-width="11" stroke-linecap="round" fill="none"/>
-      <path d="M139 104l6 6" stroke="#3a0e1d" stroke-width="8" stroke-linecap="round"/>
-      <path d="M144 107q8-1 9 6q-2 5-8 2" fill="#ece6f2"/>
-      <path d="M150 114v8" stroke="#6b5a3e" stroke-width="2.2"/>
-      <circle cx="150" cy="140" r="26" fill="url(#gFlame)" opacity=".55"/>
-      <path d="M141 122h18l-2 5h-14z" fill="#3b2f3f"/>
-      <rect x="142" y="127" width="16" height="22" rx="3" fill="rgba(255,214,120,.18)" stroke="#3b2f3f" stroke-width="2.4"/>
-      <path d="M150 131c3 4 4 7 0 11c-4-4-3-7 0-11z" fill="#ffd36b"/>
-      <path d="M140 149h20l-2 4h-16z" fill="#3b2f3f"/>
-    </symbol>
     <symbol id="bat" viewBox="0 0 64 28"><path d="M32 8c2-5 5-6 6-8c0 3 1 5 3 6c6-3 14-2 23 6c-6-1-9 1-11 5c-3-3-7-3-9 1c-2-3-5-3-7 0c-1-3-3-5-5-5s-4 2-5 5c-2-3-5-3-7 0c-2-4-6-4-9-1c-2-4-5-6-11-5c9-8 17-9 23-6c2-1 3-3 3-6c1 2 4 3 6 8z" fill="currentColor"/></symbol>
   </defs>
 </svg>
@@ -505,10 +922,14 @@ details p{margin:8px 0 0}
   <section class="home" id="home">
     <div class="hero">
       <h1 class="hello" id="hello"><span id="helloA">Oi,</span> <em id="helloName">pessoa</em>.<br><span id="helloB">Bora assistir junto?</span></h1>
-      <svg class="mascot float" viewBox="0 0 170 190" role="img" aria-label="Penumbra, o fantasminha da Sessão de Série"><use href="#penumbra"/></svg>
+      <svg class="mascot float" id="heroPen" viewBox="-8 -64 252 304" role="img" aria-label="Penumbra, o fantasminha da Sessão de Série"><use href="#p-pen-bruxa"/></svg>
     </div>
     <p class="lede" id="lede">Abra uma sala, mande o código e cada um assiste do próprio sofá, com imagem e som direto do seu PC.</p>
     <label class="whoami" for="nameInput">Seus amigos vão te ver como <input class="field" id="nameInput" maxlength="24" placeholder="Seu nome" autocomplete="off"></label>
+    <div class="costumes" id="costumes">
+      <span class="clabel">Fantasia do seu Penumbra</span>
+      <div class="cgrid" id="cgrid" role="group" aria-label="Fantasia do seu Penumbra"></div>
+    </div>
 
     <div class="choices">
       <article class="choice">
@@ -658,7 +1079,7 @@ details p{margin:8px 0 0}
     <div class="stage">
       <div class="screen" id="screen">
         <video id="video" playsinline autoplay muted></video>
-        <div class="empty" id="empty"><div><svg class="mascot float" viewBox="0 0 170 190" aria-hidden="true"><use href="#penumbra"/></svg><div class="spinner" id="emptySpin" hidden></div><strong id="emptyTitle">Preparando a sala</strong><span id="emptyText">Só um instante.</span></div></div>
+        <div class="empty" id="empty"><div><svg class="mascot float" id="emptyPen" viewBox="-8 -64 252 304" aria-hidden="true"><use href="#p-pen-bruxa"/></svg><div class="spinner" id="emptySpin" hidden></div><strong id="emptyTitle">Preparando a sala</strong><span id="emptyText">Só um instante.</span></div></div>
         <div class="floaters" id="floaters"></div>
         <div class="chatfloat" id="chatFloat"></div>
         <div class="onair" id="liveBadge" hidden><i></i>AO VIVO<span id="liveCount"></span></div>
@@ -672,7 +1093,7 @@ details p{margin:8px 0 0}
             <label><input type="checkbox" id="scareMute"> Silenciar para mim</label>
           </div>
         </div>
-        <div class="boo" id="boo" aria-hidden="true"><small id="booName"></small><svg viewBox="0 0 170 190"><use href="#penumbra"/></svg></div>
+        <div class="boo" id="boo" aria-hidden="true"><small id="booName"></small><svg id="booPen" viewBox="-8 -64 252 304"><use href="#p-pen-bruxa"/></svg></div>
         <button class="btn unmute" id="unmuteBtn" hidden>Ativar som</button>
       </div>
 
@@ -1510,7 +1931,7 @@ details p{margin:8px 0 0}
       foundTimer = setTimeout(() => { if (peer === viewPeer && !viewCall) scheduleRetry("A sala não respondeu."); }, 12000);
       conn.on("open", () => {
         setStatus("view", "Conectado. Recebendo o vídeo…", "");
-        try { conn.send({ type: "hello", name: social.myName() }); } catch(e){}
+        try { conn.send({ type: "hello", name: social.myName(), costume: social.myCostume() }); } catch(e){}
       });
       conn.on("data", d => {
         if (d && d.type === "end") {
@@ -1775,18 +2196,49 @@ details p{margin:8px 0 0}
     const PALETTE = ["#ff9b74", "#7cc4ff", "#b69cff", "#6fd6a8", "#ffc861", "#ff7aa8", "#5fd3e6"];
     const EMOJIS = ["😂", "😮", "😍", "👏", "🔥", "🍿", "😠", "🖕"];
     const names = new Map();   // transmissor: id do amigo -> nome
+    const costumes = new Map(); // transmissor: id do amigo -> fantasia do Penumbra
     let people = [];           // [{ id, name, host }]
     let lastReact = 0;
 
     const clean = (t, n) => String(t == null ? "" : t).replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim().slice(0, n);
     function myName(strict){ const n = clean(store.get("nome", ""), 24); return strict ? n : (n || "Convidado"); }
     function colorOf(name){ let h = 0; for (const ch of String(name)) h = (h * 31 + ch.codePointAt(0)) >>> 0; return PALETTE[h % PALETTE.length]; }
-    function avatar(name, big){
+    // ----- fantasias do Penumbra -----
+    const COSTUMES = { bruxa: "Bruxinho", vampiro: "Conde vampiro", mumia: "Múmia", abobora: "Abóbora", zumbi: "Zumbi", pirata: "Pirata", esqueleto: "Esqueleto" };
+    const NS = "http://www.w3.org/2000/svg";
+    const validCostume = c => (c && COSTUMES[c]) ? c : "";
+    function myCostume(){ return validCostume(store.get("fantasia", "")) || "bruxa"; }
+    const terror = () => document.documentElement.dataset.clima === "terror";
+    // desenha o Penumbra com uma fantasia; "rosto" recorta só a cabeça (para avatares e miniaturas)
+    function penSvg(costume, face, el){
+      const svg = el || document.createElementNS(NS, "svg");
+      svg.setAttribute("viewBox", face === "thumb" ? "16 -46 188 188" : face ? "34 18 152 152" : "-8 -64 252 304");
+      const use = document.createElementNS(NS, "use");
+      use.setAttribute("href", "#p-pen-" + (validCostume(costume) || "bruxa"));
+      use.setAttribute("x", "-8"); use.setAttribute("y", "-64"); use.setAttribute("width", "252"); use.setAttribute("height", "304");
+      svg.replaceChildren(use);
+      return svg;
+    }
+    function costumeOf(name){ const p = people.find(x => x.name === name); return p ? p.costume : ""; }
+    function avatar(name, big, costume){
       const s = document.createElement("span");
-      s.className = "av" + (big ? " lg" : ""); s.style.setProperty("--c", colorOf(name));
-      s.textContent = ([...clean(name, 24)][0] || "?").toUpperCase(); s.title = name;
+      s.className = "av" + (big ? " lg" : ""); s.style.setProperty("--c", colorOf(name)); s.title = name;
+      if (terror() && validCostume(costume)) { s.classList.add("pen"); s.appendChild(penSvg(costume, true)); }
+      else s.textContent = ([...clean(name, 24)][0] || "?").toUpperCase();
       return s;
     }
+    function paintMascots(){
+      const c = myCostume();
+      ["heroPen", "emptyPen"].forEach(id => penSvg(c, false, $(id)));
+      $("heroPen").setAttribute("aria-label", "Penumbra de " + COSTUMES[c]);
+      $("cgrid").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.c === c));
+    }
+    Object.entries(COSTUMES).forEach(([key, label]) => {
+      const b = document.createElement("button"); b.type = "button"; b.dataset.c = key; b.title = label;
+      b.append(penSvg(key, "thumb"), document.createTextNode(label));
+      b.onclick = () => { store.set("fantasia", key); paintMascots(); paintName(); };
+      $("cgrid").appendChild(b);
+    });
     function myId(){ return role === "host" ? "host" : (viewPeer && viewPeer.id) || ""; }
 
     // ----- nome -----
@@ -1794,13 +2246,13 @@ details p{margin:8px 0 0}
       const n = myName(true);
       $("helloName").textContent = n || "pessoa";
       $("meName").textContent = n || "sem nome";
-      const a = avatar(n || "?"); $("meAv").replaceWith(a); a.id = "meAv";
+      const a = avatar(n || "?", false, myCostume()); $("meAv").replaceWith(a); a.id = "meAv";
     }
     function askName(){ const i = $("nameInput"); i.focus(); i.placeholder = "Escreva seu nome aqui"; i.scrollIntoView({ block: "center", behavior: "smooth" }); }
     $("nameInput").value = myName(true);
     $("nameInput").addEventListener("input", () => { store.set("nome", clean($("nameInput").value, 24)); paintName(); });
     $("meChip").onclick = () => { if ($("app").dataset.view !== "session") askName(); };
-    paintName();
+    paintName(); paintMascots();
 
     // ----- quem está aqui -----
     function renderPeople(){
@@ -1811,10 +2263,10 @@ details p{margin:8px 0 0}
         const nm = document.createElement("span"); nm.textContent = p.name;
         const tag = document.createElement("span"); tag.className = "tag";
         tag.textContent = p.host ? (p.id === me ? "você · transmitindo" : "transmitindo") : (p.id === me ? "você" : "");
-        row.append(avatar(p.name, true), nm, tag); list.appendChild(row);
+        row.append(avatar(p.name, true, p.costume), nm, tag); list.appendChild(row);
       });
       const faces = $("topFaces"); faces.innerHTML = "";
-      people.slice(0, 5).forEach(p => faces.appendChild(avatar(p.name)));
+      people.slice(0, 5).forEach(p => faces.appendChild(avatar(p.name, false, p.costume)));
       if (people.length > 5) { const m = document.createElement("span"); m.className = "more"; m.textContent = "+" + (people.length - 5); faces.appendChild(m); }
       const host = people.find(p => p.host);
       if (role !== "host" && host) $("viewTitle").textContent = "Sala de " + host.name;
@@ -1833,7 +2285,7 @@ details p{margin:8px 0 0}
         const body = document.createElement("div"); body.className = "body";
         const who = document.createElement("div"); who.className = "who"; who.style.color = colorOf(m.from); who.textContent = m.from;
         const tx = document.createElement("div"); tx.className = "text"; tx.textContent = m.text;
-        body.append(who, tx); row.append(avatar(m.from), body);
+        body.append(who, tx); row.append(avatar(m.from, false, costumeOf(m.from)), body);
       }
       const atBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 60;
       list.appendChild(row);
@@ -1915,15 +2367,16 @@ details p{margin:8px 0 0}
       const mode = audioMode();
       return mode === "system" || (mode === "app" && !!(currentAudioTarget && currentAudioTarget.except));
     }
-    function boo(text){
+    function boo(text, costume){
       const b = $("boo"); $("booName").textContent = text;
+      penSvg(costume || "bruxa", false, $("booPen"));
       b.classList.remove("go"); void b.offsetWidth; b.classList.add("go");
       const sc = $("screen"); sc.classList.remove("shake"); void sc.offsetWidth; sc.classList.add("shake");
     }
-    function showScare(sound, from){
+    function showScare(sound, from, costume){
       const [em, label] = SCARES[sound];
       pop(em, from);
-      if (JUMP.has(sound)) boo(from + " mandou: " + label);
+      if (JUMP.has(sound)) boo(from + " mandou: " + label, validCostume(costume) || costumeOf(from));
     }
     function scare(sound){
       if (!SCARES[sound]) return;
@@ -1931,8 +2384,8 @@ details p{margin:8px 0 0}
       if (role === "host") {
         if (!stream) return;
         myLastScare = now; cooldownUI();
-        const m = { type: "scare", sound, from: myName(), leak: leaks() };
-        broadcast(m); sfx.play(sound); showScare(sound, m.from);
+        const m = { type: "scare", sound, from: myName(), costume: myCostume(), leak: leaks() };
+        broadcast(m); sfx.play(sound); showScare(sound, m.from, m.costume);
         return;
       }
       if (viewConn && viewConn.open) {
@@ -1945,8 +2398,8 @@ details p{margin:8px 0 0}
     function broadcast(m){ viewers.forEach(v => { try { if (v.conn && v.conn.open) v.conn.send(m); } catch(e){} }); }
     function hostSync(){
       if (role !== "host") return;
-      people = [{ id: "host", name: myName(), host: true }]
-        .concat([...viewers.keys()].map(id => ({ id, name: names.get(id) || "Chegando…" })));
+      people = [{ id: "host", name: myName(), host: true, costume: myCostume() }]
+        .concat([...viewers.keys()].map(id => ({ id, name: names.get(id) || "Chegando…", costume: costumes.get(id) || "" })));
       broadcast({ type: "people", list: people });
       renderPeople();
     }
@@ -1955,6 +2408,7 @@ details p{margin:8px 0 0}
       if (d.type === "hello") {
         const first = !names.has(id);
         names.set(id, clean(d.name, 24) || "Convidado");
+        costumes.set(id, validCostume(d.costume));
         hostSync();
         if (first) { const m = { type: "chat", sys: true, text: names.get(id) + " entrou na sala" }; broadcast(m); addChat(m); }
       } else if (d.type === "chat") {
@@ -1970,13 +2424,13 @@ details p{margin:8px 0 0}
         const now = Date.now();
         if (now - (lastScareBy.get(id) || 0) < COOLDOWN - 300) return; // um susto a cada 3 s por pessoa
         lastScareBy.set(id, now);
-        const m = { type: "scare", sound: d.sound, from: names.get(id) || "Convidado", leak: leaks() };
-        broadcast(m); sfx.play(d.sound); showScare(m.sound, m.from);
+        const m = { type: "scare", sound: d.sound, from: names.get(id) || "Convidado", costume: costumes.get(id) || "", leak: leaks() };
+        broadcast(m); sfx.play(d.sound); showScare(m.sound, m.from, m.costume);
       }
     }
     function hostLeft(id){
       if (viewers.has(id)) return; // voltou na hora (reconexão)
-      const name = names.get(id); names.delete(id);
+      const name = names.get(id); names.delete(id); costumes.delete(id);
       if (name) { const m = { type: "chat", sys: true, text: name + " saiu" }; broadcast(m); addChat(m); }
       hostSync();
     }
@@ -1985,14 +2439,14 @@ details p{margin:8px 0 0}
     function viewData(d){
       if (!d || typeof d !== "object") return;
       if (d.type === "people" && Array.isArray(d.list)) {
-        people = d.list.slice(0, 50).map(p => ({ id: String(p.id || ""), name: clean(p.name, 24) || "Convidado", host: !!p.host }));
+        people = d.list.slice(0, 50).map(p => ({ id: String(p.id || ""), name: clean(p.name, 24) || "Convidado", host: !!p.host, costume: validCostume(p.costume) }));
         renderPeople();
       } else if (d.type === "chat") {
         if (d.sys) system(clean(d.text, 120)); else addChat({ from: clean(d.from, 24) || "Convidado", text: clean(d.text, 300) });
       } else if (d.type === "react" && EMOJIS.includes(d.emoji)) pop(d.emoji, clean(d.from, 24));
       else if (d.type === "scare" && SCARES[d.sound]) {
         if (!d.leak) sfx.play(d.sound);
-        showScare(d.sound, clean(d.from, 24) || "Alguém");
+        showScare(d.sound, clean(d.from, 24) || "Alguém", validCostume(d.costume));
       }
     }
 
@@ -2015,13 +2469,15 @@ details p{margin:8px 0 0}
     });
 
     function reset(){
-      names.clear(); people = [];
+      names.clear(); costumes.clear(); people = [];
       $("chatList").innerHTML = '<div class="empty-chat" id="chatEmpty">Diga oi. As mensagens aparecem aqui e em cima do vídeo quando a lateral estiver fechada.</div>';
       $("chatFloat").innerHTML = ""; $("floaters").innerHTML = "";
       renderPeople();
     }
 
-    return { myName, askName, hostSync, hostData, hostLeft, viewData, system, reset };
+    // ao ligar ou desligar o modo terror, troca as bolinhas com inicial pelos Penumbras (e vice-versa)
+    function refresh(){ paintName(); paintMascots(); renderPeople(); }
+    return { myName, myCostume, askName, hostSync, hostData, hostLeft, viewData, system, reset, refresh };
   })();
 
   // ================= QUALIDADE SIMPLIFICADA =================
@@ -2080,6 +2536,7 @@ details p{margin:8px 0 0}
     $("climaLbl").textContent = on ? "Modo terror ligado" : "Modo terror";
     $("helloA").textContent = on ? "Boa noite," : "Oi,";
     $("helloB").textContent = on ? "Tem coragem de assistir junto?" : "Bora assistir junto?";
+    social.refresh();
     $("lede").textContent = on
       ? "Apague a luz, chame a turma e mande o código. Os sustos estão liberados: aperte 💀 Susto durante a sessão."
       : "Abra uma sala, mande o código e cada um assiste do próprio sofá, com imagem e som direto do seu PC.";
