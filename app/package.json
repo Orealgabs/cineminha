@@ -1,7 +1,7 @@
 {
   "name": "sessao-de-serie",
   "productName": "Sessão de Série",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "Transmita tela e som para os amigos",
   "main": "main.js",
   "author": "Sessão de Série",

@@ -292,6 +292,8 @@ details p{margin:8px 0 0}
 @media (prefers-reduced-motion:reduce){.fx .bat{display:none}}
 @keyframes fly{0%{transform:translate(0,120px)}25%{transform:translate(28vw,60px)}50%{transform:translate(55vw,140px)}75%{transform:translate(80vw,50px)}100%{transform:translate(calc(100vw + 120px),100px)}}
 @keyframes flap{from{transform:scaleY(1)}to{transform:scaleY(.45)}}
+/* cenário no rodapé */
+.fx .scene{position:absolute;left:0;bottom:0;width:100%;height:clamp(150px,26vh,250px);opacity:.95}
 /* teia no canto */
 .fx .web{position:absolute;top:0;left:0;width:190px;opacity:.28;color:#d8d2de}
 .fx .web.r{left:auto;right:0;bottom:0;top:auto;transform:rotate(180deg);width:150px;opacity:.18}
@@ -315,7 +317,7 @@ details p{margin:8px 0 0}
 .mascot{display:none}
 :root[data-clima="terror"] .mascot{display:block}
 .hero{display:flex;align-items:flex-end;justify-content:space-between;gap:20px}
-.hero .mascot{width:clamp(96px,14vw,150px);flex:none;filter:drop-shadow(0 0 30px rgba(141,255,166,.25))}
+.hero .mascot{width:clamp(110px,16vw,196px);flex:none;filter:drop-shadow(0 0 30px rgba(141,255,166,.25))}
 @media (prefers-reduced-motion:no-preference){.mascot.float{animation:hover 4s ease-in-out infinite}}
 @keyframes hover{50%{transform:translateY(-10px) rotate(-2deg)}}
 @media (max-width:620px){.hero .mascot{width:84px}}
@@ -373,23 +375,55 @@ details p{margin:8px 0 0}
   <defs>
     <radialGradient id="gBody" cx="40%" cy="30%" r="80%"><stop offset="0" stop-color="#ffffff"/><stop offset=".7" stop-color="#ece6f2"/><stop offset="1" stop-color="#cfc6da"/></radialGradient>
     <radialGradient id="gFlame" cx="50%" cy="60%" r="60%"><stop offset="0" stop-color="#fff6c8"/><stop offset=".45" stop-color="#ffc24a"/><stop offset="1" stop-color="#ff7a1a" stop-opacity="0"/></radialGradient>
-    <!-- Penumbra: o fantasminha da Sessão de Série (personagem original) -->
-    <symbol id="penumbra" viewBox="0 0 150 150">
-      <ellipse cx="62" cy="144" rx="38" ry="4" fill="#000" opacity=".25"/>
-      <path d="M62 10C33 10 18 34 18 64v50q11 13 22 0q11-13 22 0q11 13 22 0q11-13 22 0V64C106 34 91 10 62 10z" fill="url(#gBody)"/>
-      <path d="M98 70q16 2 22 14" stroke="#e7e0ee" stroke-width="10" stroke-linecap="round" fill="none"/>
-      <rect x="83" y="92" width="14" height="11" rx="2" fill="#d9cfe4" transform="rotate(-12 90 97)"/>
-      <path d="M84 95l2 2m2-3l2 2m2-3l2 2m-8 6l2 2m2-3l2 2m2-3l2 2" stroke="#9c8fab" stroke-width="1.2" stroke-linecap="round" transform="rotate(-12 90 97)"/>
-      <ellipse cx="48" cy="56" rx="7.5" ry="10" fill="#1b1420"/><ellipse cx="74" cy="56" rx="7.5" ry="10" fill="#1b1420"/>
-      <circle cx="50.5" cy="52" r="2.6" fill="#fff"/><circle cx="76.5" cy="52" r="2.6" fill="#fff"/>
-      <ellipse cx="61" cy="77" rx="5" ry="6.5" fill="#1b1420"/>
-      <ellipse cx="38" cy="70" rx="6" ry="3.5" fill="#ff9fb4" opacity=".55"/><ellipse cx="84" cy="70" rx="6" ry="3.5" fill="#ff9fb4" opacity=".55"/>
-      <path d="M121 84v8" stroke="#6b5a3e" stroke-width="2.2"/>
-      <circle cx="121" cy="112" r="24" fill="url(#gFlame)" opacity=".55"/>
-      <path d="M112 93h18l-2 5h-14z" fill="#3b2f3f"/>
-      <rect x="113" y="98" width="16" height="22" rx="3" fill="rgba(255,214,120,.18)" stroke="#3b2f3f" stroke-width="2.4"/>
-      <path d="M121 102c3 4 4 7 0 11c-4-4-3-7 0-11z" fill="#ffd36b"/>
-      <path d="M111 120h20l-2 4h-16z" fill="#3b2f3f"/>
+    <!-- Penumbra: o fantasminha da Sessão de Série (personagem original), versão boneco costurado à mão -->
+    <pattern id="pTweed" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(35)"><path d="M0 3h6" stroke="#000" stroke-opacity=".18" stroke-width="1.2"/><path d="M3 0v2" stroke="#fff" stroke-opacity=".06" stroke-width="1"/></pattern>
+    <pattern id="pLinen" width="5" height="5" patternUnits="userSpaceOnUse"><path d="M0 2.5h5M2.5 0v5" stroke="#6e5f80" stroke-opacity=".08" stroke-width=".8"/></pattern>
+    <linearGradient id="gCoat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7d2440"/><stop offset="1" stop-color="#4a1326"/></linearGradient>
+    <symbol id="penumbra" viewBox="0 0 170 190">
+      <ellipse cx="80" cy="183" rx="44" ry="5" fill="#000" opacity=".28"/>
+      <!-- corpo de lençol, com a barra rasgada -->
+      <path d="M80 6C55 6 42 27 42 56L39 150L47 165L56 152L64 170L73 155L81 171L90 156L98 168L106 153L113 164L121 149L118 56C118 27 105 6 80 6Z" fill="url(#gBody)"/>
+      <path d="M80 6C55 6 42 27 42 56L39 150L47 165L56 152L64 170L73 155L81 171L90 156L98 168L106 153L113 164L121 149L118 56C118 27 105 6 80 6Z" fill="url(#pLinen)"/>
+      <!-- costura na cabeça -->
+      <path d="M52 30q8-12 22-14" stroke="#9c8fab" stroke-width="1.6" stroke-dasharray="3 3" fill="none" stroke-linecap="round"/>
+      <path d="M53 27l2 5M58 22l3 4M64 18l2 5M70 16l1 5" stroke="#9c8fab" stroke-width="1.2" stroke-linecap="round"/>
+      <!-- rosto: olhos de tamanhos diferentes, boquinha de susto -->
+      <ellipse cx="67" cy="46" rx="7" ry="9" fill="#1b1420"/><ellipse cx="93" cy="44" rx="9.5" ry="11.5" fill="#1b1420"/>
+      <circle cx="69.5" cy="42" r="2.4" fill="#fff"/><circle cx="96" cy="39.5" r="3" fill="#fff"/>
+      <ellipse cx="81" cy="64" rx="4" ry="5.2" fill="#1b1420"/>
+      <ellipse cx="57" cy="58" rx="5.5" ry="3" fill="#ff9fb4" opacity=".5"/><ellipse cx="105" cy="57" rx="5.5" ry="3" fill="#ff9fb4" opacity=".5"/>
+      <!-- sobretudo cor de vinho, aberto na frente -->
+      <path d="M62 80Q49 83 44 98L35 156Q51 163 72 158L77 100Z" fill="url(#gCoat)"/>
+      <path d="M98 80Q111 83 116 98L125 156Q109 163 88 158L83 100Z" fill="url(#gCoat)"/>
+      <path d="M62 80Q49 83 44 98L35 156Q51 163 72 158L77 100Z" fill="url(#pTweed)"/>
+      <path d="M98 80Q111 83 116 98L125 156Q109 163 88 158L83 100Z" fill="url(#pTweed)"/>
+      <!-- lapelas -->
+      <path d="M62 80L77 100L70 104L60 88Z" fill="#3a0e1d"/><path d="M98 80L83 100L90 104L100 88Z" fill="#3a0e1d"/>
+      <!-- pesponto nas bordas -->
+      <path d="M45 101L37 153M115 101L123 153M38 156Q52 160 70 156M122 156Q108 160 90 156" stroke="#d98aa0" stroke-opacity=".55" stroke-width="1.1" stroke-dasharray="2.5 3" fill="none"/>
+      <!-- remendo no casaco -->
+      <rect x="44" y="128" width="14" height="12" rx="1.5" fill="#5c6b3a" transform="rotate(-8 51 134)"/>
+      <path d="M45 128l1 2m3-2l1 2m3-2l1 2m3-2l1 2M45 140l1 2m3-2l1 2m3-2l1 2m3-2l1 2" stroke="#e8d9b0" stroke-width="1" stroke-linecap="round" transform="rotate(-8 51 134)"/>
+      <!-- botões de abóbora -->
+      <g transform="translate(72 112)"><ellipse rx="4.6" ry="4" fill="#ff8a2a"/><path d="M-1.6 -3.6v7.2M1.6 -3.6v7.2" stroke="#c45a10" stroke-width=".9"/><path d="M0 -4l1.2 -2.4" stroke="#5aa042" stroke-width="1.4" stroke-linecap="round"/></g>
+      <g transform="translate(71 127)"><ellipse rx="4.6" ry="4" fill="#ff8a2a"/><path d="M-1.6 -3.6v7.2M1.6 -3.6v7.2" stroke="#c45a10" stroke-width=".9"/><path d="M0 -4l1.2 -2.4" stroke="#5aa042" stroke-width="1.4" stroke-linecap="round"/></g>
+      <g transform="translate(70 142)"><ellipse rx="4.6" ry="4" fill="#ff8a2a"/><path d="M-1.6 -3.6v7.2M1.6 -3.6v7.2" stroke="#c45a10" stroke-width=".9"/><path d="M0 -4l1.2 -2.4" stroke="#5aa042" stroke-width="1.4" stroke-linecap="round"/></g>
+      <!-- florzinha seca na lapela -->
+      <g transform="translate(104 93)"><circle r="2.2" fill="#ffd36b"/><g fill="#9b7bd1"><ellipse cx="0" cy="-5" rx="2.4" ry="3.6"/><ellipse cx="4.8" cy="-1.5" rx="2.4" ry="3.6" transform="rotate(72 4.8 -1.5)"/><ellipse cx="3" cy="4.2" rx="2.4" ry="3.6" transform="rotate(144 3 4.2)"/><ellipse cx="-3" cy="4.2" rx="2.4" ry="3.6" transform="rotate(216 -3 4.2)"/><ellipse cx="-4.8" cy="-1.5" rx="2.4" ry="3.6" transform="rotate(288 -4.8 -1.5)"/></g></g>
+      <!-- braço esquerdo caído -->
+      <path d="M46 96Q36 118 34 134" stroke="url(#gCoat)" stroke-width="11" stroke-linecap="round" fill="none"/>
+      <path d="M31 132q3 7 8 3" stroke="#3a0e1d" stroke-width="6" stroke-linecap="round" fill="none"/>
+      <path d="M33 138q-3 7 3 8q5-1 4-7" fill="#ece6f2"/>
+      <!-- braço direito segurando a lanterna -->
+      <path d="M113 94Q130 98 143 108" stroke="url(#gCoat)" stroke-width="11" stroke-linecap="round" fill="none"/>
+      <path d="M139 104l6 6" stroke="#3a0e1d" stroke-width="8" stroke-linecap="round"/>
+      <path d="M144 107q8-1 9 6q-2 5-8 2" fill="#ece6f2"/>
+      <path d="M150 114v8" stroke="#6b5a3e" stroke-width="2.2"/>
+      <circle cx="150" cy="140" r="26" fill="url(#gFlame)" opacity=".55"/>
+      <path d="M141 122h18l-2 5h-14z" fill="#3b2f3f"/>
+      <rect x="142" y="127" width="16" height="22" rx="3" fill="rgba(255,214,120,.18)" stroke="#3b2f3f" stroke-width="2.4"/>
+      <path d="M150 131c3 4 4 7 0 11c-4-4-3-7 0-11z" fill="#ffd36b"/>
+      <path d="M140 149h20l-2 4h-16z" fill="#3b2f3f"/>
     </symbol>
     <symbol id="bat" viewBox="0 0 64 28"><path d="M32 8c2-5 5-6 6-8c0 3 1 5 3 6c6-3 14-2 23 6c-6-1-9 1-11 5c-3-3-7-3-9 1c-2-3-5-3-7 0c-1-3-3-5-5-5s-4 2-5 5c-2-3-5-3-7 0c-2-4-6-4-9-1c-2-4-5-6-11-5c9-8 17-9 23-6c2-1 3-3 3-6c1 2 4 3 6 8z" fill="currentColor"/></symbol>
   </defs>
@@ -401,6 +435,58 @@ details p{margin:8px 0 0}
   <div class="bat"><svg viewBox="0 0 64 28"><use href="#bat"/></svg></div>
   <div class="bat b2"><svg viewBox="0 0 64 28"><use href="#bat"/></svg></div>
   <div class="bat b3"><svg viewBox="0 0 64 28"><use href="#bat"/></svg></div>
+  <!-- cenário noturno do modo terror (desenho original) -->
+  <svg class="scene" viewBox="0 0 1440 260" preserveAspectRatio="xMidYMax slice">
+    <defs>
+      <radialGradient id="gWin" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#ffb14a" stop-opacity=".7"/><stop offset="1" stop-color="#ffb14a" stop-opacity="0"/></radialGradient>
+    </defs>
+    <!-- morro torto ao fundo, com uma casinha inclinada -->
+    <path d="M760 260C800 190 860 150 930 132C990 118 1040 140 1080 120C1130 96 1190 104 1240 140C1300 182 1360 210 1440 216V260Z" fill="#17101c"/>
+    <g transform="translate(1066 70) rotate(-6)">
+      <circle cx="18" cy="34" r="30" fill="url(#gWin)"/>
+      <path d="M0 22L18 2L38 20V58H0Z" fill="#100b13"/>
+      <path d="M-4 24L18 0L42 22" stroke="#100b13" stroke-width="5" fill="none"/>
+      <rect x="11" y="28" width="10" height="11" rx="1" fill="#ffb14a"/>
+      <path d="M16 28v11M11 33.5h10" stroke="#100b13" stroke-width="1.6"/>
+      <path d="M30 6v-12h6v16" fill="#100b13"/>
+    </g>
+    <!-- chão da frente -->
+    <path d="M0 214C120 196 240 206 360 200C520 192 640 214 800 208C960 202 1100 222 1240 214C1330 209 1390 214 1440 212V260H0Z" fill="#0b080e"/>
+    <!-- árvore seca retorcida à esquerda -->
+    <g stroke="#0b080e" stroke-linecap="round" fill="none">
+      <path d="M150 214C152 180 140 160 156 130C168 108 150 92 160 70" stroke-width="13"/>
+      <path d="M156 132C130 120 116 98 92 96C80 95 74 86 66 76" stroke-width="7"/>
+      <path d="M160 104C180 96 196 74 220 72C236 70 244 58 256 50" stroke-width="7"/>
+      <path d="M160 72C150 54 166 40 158 22" stroke-width="5"/>
+      <path d="M92 96C88 84 98 76 92 64M220 72C222 60 214 52 220 40M256 50C268 50 274 42 284 44M66 76C56 74 52 66 44 66" stroke-width="3.5"/>
+      <path d="M158 22C164 14 160 8 166 2M110 98C104 108 96 110 90 118" stroke-width="2.5"/>
+    </g>
+    <!-- lápides tortas -->
+    <g fill="#120c15">
+      <path d="M300 214V184Q300 166 316 166Q332 166 332 184V214Z" transform="rotate(-7 316 200)"/>
+      <path d="M352 214V190h28v24Z" transform="rotate(5 366 202)"/>
+      <path d="M364 182h4v-8h4v8h4v4h-4v10h-4v-10h-4Z" transform="rotate(5 366 202)"/>
+      <path d="M1180 222V196Q1180 182 1194 182Q1208 182 1208 196V222Z" transform="rotate(8 1194 206)"/>
+    </g>
+    <!-- portão do cemitério -->
+    <g stroke="#0b080e" fill="none" stroke-linecap="round">
+      <path d="M560 214V120M700 214V120" stroke-width="12"/>
+      <path d="M552 118h16M692 118h16" stroke-width="8"/>
+      <path d="M572 140Q630 104 688 140" stroke-width="5"/>
+      <path d="M586 214V136M600 214V128M614 214V123M628 214V121M642 214V122M656 214V126M670 214V132M684 214V140" stroke-width="3"/>
+      <path d="M572 180h116" stroke-width="4"/>
+      <path d="M600 128l-3-8M628 121l0-9M656 126l3-8" stroke-width="3"/>
+    </g>
+    <!-- arbusto e corvo no portão -->
+    <path d="M520 214q10-24 26-12q10-18 24-4q14-6 16 16Z" fill="#0b080e"/>
+    <path d="M700 112q-4-10 4-12q4-6 10 0l8 2l-6 3q2 8-6 9z" fill="#0b080e"/>
+    <!-- árvore pequena à direita -->
+    <g stroke="#0b080e" stroke-linecap="round" fill="none">
+      <path d="M1330 214C1332 196 1324 184 1334 166C1340 154 1332 146 1338 134" stroke-width="8"/>
+      <path d="M1334 168C1318 160 1310 148 1296 148M1336 150C1350 144 1356 132 1370 130" stroke-width="4.5"/>
+      <path d="M1296 148C1290 140 1294 134 1288 126M1370 130C1374 122 1370 116 1376 110" stroke-width="2.5"/>
+    </g>
+  </svg>
   <div class="fog"></div><div class="fog b"></div>
 </div>
 <div class="app" id="app" data-view="home">
@@ -419,7 +505,7 @@ details p{margin:8px 0 0}
   <section class="home" id="home">
     <div class="hero">
       <h1 class="hello" id="hello"><span id="helloA">Oi,</span> <em id="helloName">pessoa</em>.<br><span id="helloB">Bora assistir junto?</span></h1>
-      <svg class="mascot float" viewBox="0 0 150 150" role="img" aria-label="Penumbra, o fantasminha da Sessão de Série"><use href="#penumbra"/></svg>
+      <svg class="mascot float" viewBox="0 0 170 190" role="img" aria-label="Penumbra, o fantasminha da Sessão de Série"><use href="#penumbra"/></svg>
     </div>
     <p class="lede" id="lede">Abra uma sala, mande o código e cada um assiste do próprio sofá, com imagem e som direto do seu PC.</p>
     <label class="whoami" for="nameInput">Seus amigos vão te ver como <input class="field" id="nameInput" maxlength="24" placeholder="Seu nome" autocomplete="off"></label>
@@ -572,7 +658,7 @@ details p{margin:8px 0 0}
     <div class="stage">
       <div class="screen" id="screen">
         <video id="video" playsinline autoplay muted></video>
-        <div class="empty" id="empty"><div><svg class="mascot float" viewBox="0 0 150 150" aria-hidden="true"><use href="#penumbra"/></svg><div class="spinner" id="emptySpin" hidden></div><strong id="emptyTitle">Preparando a sala</strong><span id="emptyText">Só um instante.</span></div></div>
+        <div class="empty" id="empty"><div><svg class="mascot float" viewBox="0 0 170 190" aria-hidden="true"><use href="#penumbra"/></svg><div class="spinner" id="emptySpin" hidden></div><strong id="emptyTitle">Preparando a sala</strong><span id="emptyText">Só um instante.</span></div></div>
         <div class="floaters" id="floaters"></div>
         <div class="chatfloat" id="chatFloat"></div>
         <div class="onair" id="liveBadge" hidden><i></i>AO VIVO<span id="liveCount"></span></div>
@@ -586,7 +672,7 @@ details p{margin:8px 0 0}
             <label><input type="checkbox" id="scareMute"> Silenciar para mim</label>
           </div>
         </div>
-        <div class="boo" id="boo" aria-hidden="true"><small id="booName"></small><svg viewBox="0 0 150 150"><use href="#penumbra"/></svg></div>
+        <div class="boo" id="boo" aria-hidden="true"><small id="booName"></small><svg viewBox="0 0 170 190"><use href="#penumbra"/></svg></div>
         <button class="btn unmute" id="unmuteBtn" hidden>Ativar som</button>
       </div>
 
