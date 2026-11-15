@@ -1767,10 +1767,19 @@ details p{margin:8px 0 0}
       });
       conn.on("close", () => { dropViewer(conn.peer); social.hostLeft(conn.peer); });
     });
+    // sem o servidor da sala, quem já está assistindo continua normal; só novos amigos não conseguem entrar até religar
+    let relink = null;
+    const peerNow = hostPeer;
+    function relinkServer(delay){
+      clearTimeout(relink);
+      relink = setTimeout(() => {
+        try { if (stream && hostPeer === peerNow && !peerNow.destroyed && peerNow.disconnected) { peerNow.reconnect(); relinkServer(5000); } } catch(e){}
+      }, delay);
+    }
     hostPeer.on("disconnected", () => {
       if (!stream || !hostPeer || hostPeer.destroyed) return;
-      setStatus("host", "Conexão com a sala caiu. Reconectando…", "warn");
-      setTimeout(() => { try { hostPeer && !hostPeer.destroyed && hostPeer.reconnect(); } catch(e){} }, 1000);
+      setStatus("host", "O servidor da sala caiu. Quem já está assistindo continua normal; religando para novos amigos…", "warn");
+      relinkServer(1000);
     });
     hostPeer.on("error", e => {
       if (e.type === "unavailable-id") {
@@ -1787,8 +1796,8 @@ details p{margin:8px 0 0}
         return;
       }
       if (["network", "server-error", "socket-error", "socket-closed"].includes(e.type)) {
-        setStatus("host", "Sem conexão com o servidor da sala. Tentando de novo…", "warn");
-        setTimeout(() => { try { hostPeer && !hostPeer.destroyed && hostPeer.reconnect(); } catch(err){} }, 3000);
+        setStatus("host", "O servidor da sala caiu. Quem já está assistindo continua normal; religando para novos amigos…", "warn");
+        relinkServer(3000);
         return;
       }
       if (e.type !== "peer-unavailable") setStatus("host", "Erro de conexão: " + (e.type || e.message), "bad");
@@ -1963,8 +1972,11 @@ details p{margin:8px 0 0}
     if (!attempts) setStatus("view", "Procurando a sala…", "");
     const peer = viewPeer = new Peer(undefined, { config: ICE, debug: 0 });
 
+    let linked = false;
     peer.on("open", () => {
-      if (peer !== viewPeer) return;
+      // "open" também dispara quando o servidor da sala religa: aí já estamos conectados, não abre outra conexão
+      if (peer !== viewPeer || linked) return;
+      linked = true;
       const conn = viewConn = peer.connect(wanted, { reliable: true });
       foundTimer = setTimeout(() => { if (peer === viewPeer && !viewCall) scheduleRetry("A sala não respondeu."); }, 12000);
       conn.on("open", () => {
@@ -2030,14 +2042,22 @@ details p{margin:8px 0 0}
       call.on("close", () => { if (call === viewCall && !ended) scheduleRetry("A transmissão parou."); });
     });
 
-    peer.on("disconnected", () => {
-      // sem servidor da sala: o vídeo continua, só reconecta o canal de controle
-      setTimeout(() => { try { peer === viewPeer && !peer.destroyed && peer.reconnect(); } catch(e){} }, 2000);
-    });
+    // O servidor da sala só serve para os dois se acharem. Depois disso o vídeo e a conversa vão direto
+    // entre os PCs, então se ele cair não derruba nada: só religa o servidor em segundo plano.
+    const watching = () => !!(viewConn && viewConn.open) || !!(viewCall && viewCall.peerConnection && /connected|completed/.test(viewCall.peerConnection.iceConnectionState));
+    let relink = null;
+    function relinkServer(){
+      clearTimeout(relink);
+      relink = setTimeout(() => { try { if (peer === viewPeer && !peer.destroyed && peer.disconnected) { peer.reconnect(); relinkServer(); } } catch(e){} }, 3000);
+    }
+    peer.on("disconnected", relinkServer);
     peer.on("error", e => {
       if (peer !== viewPeer) return;
       if (e.type === "peer-unavailable") scheduleRetry(everConnected ? "Seu amigo saiu da sala." : "Sala não encontrada.");
-      else if (["network", "server-error", "socket-error", "socket-closed"].includes(e.type)) scheduleRetry("Sem conexão com o servidor da sala.");
+      else if (["network", "server-error", "socket-error", "socket-closed"].includes(e.type)) {
+        if (watching()) relinkServer();
+        else scheduleRetry("Sem conexão com o servidor da sala.");
+      }
       else setStatus("view", "Erro de conexão: " + (e.type || e.message), "bad");
     });
   }
