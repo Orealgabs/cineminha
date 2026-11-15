@@ -1060,7 +1060,7 @@ details p{margin:8px 0 0}
         <div>
           <label class="label" for="codec">Codec de vídeo</label>
           <select class="field" id="codec"></select>
-          <div class="hint" id="codecHint">VP9 e AV1 deixam a imagem mais nítida com a mesma internet. H.264 pesa menos no PC.</div>
+          <div class="hint" id="codecHint">H.264 usa a placa de vídeo e não pesa no jogo. VP9 e AV1 ficam um pouco mais nítidos, mas usam bastante o processador.</div>
         </div>
         <div>
           <div class="row"><label class="label" for="bitrate">Taxa de vídeo</label><span class="mono" id="bitrateVal">5000 kbps</span></div>
@@ -1276,12 +1276,15 @@ details p{margin:8px 0 0}
     try { caps = RTCRtpSender.getCapabilities("video").codecs.map(c => c.mimeType.toUpperCase()); } catch(e){}
     const has = n => caps.includes("VIDEO/" + n);
     const opts = [
-      ["VP9", "VP9 · mais nítido (recomendado)", has("VP9")],
-      ["AV1", "AV1 · o mais nítido, pesa mais no PC", has("AV1")],
-      ["H264", "H.264 · mais leve para o PC", has("H264")],
+      ["H264", "H.264 · leve, usa a placa de vídeo (recomendado)", has("H264")],
+      ["VP9", "VP9 · mais nítido, pesa no processador", has("VP9")],
+      ["AV1", "AV1 · o mais nítido, pesa muito no processador", has("AV1")],
       ["auto", "Automático (o navegador escolhe)", true]
     ].filter(o => o[2]);
-    const sel = $("codec"), saved = store.get("codec", "VP9");
+    // antes o padrão era VP9, que pesa no processador e travava a tela inteira junto com jogo: muda uma vez para H.264
+    let saved = store.get("codec", "H264");
+    if (store.get("codecV", "") !== "2") { if (saved === "VP9") { saved = "H264"; store.set("codec", saved); } store.set("codecV", "2"); }
+    const sel = $("codec");
     opts.forEach(([v, t]) => { const o = document.createElement("option"); o.value = v; o.textContent = t; sel.appendChild(o); });
     sel.value = opts.some(o => o[0] === saved) ? saved : opts[0][0];
   })();
@@ -1691,9 +1694,29 @@ details p{margin:8px 0 0}
 
   function dropViewer(id){
     const v = viewers.get(id); if (!v) return;
-    viewers.delete(id);
+    viewers.delete(id); clearTimeout(v.iceTimer);
     try { v.call && v.call.close(); } catch(e){}
     renderViewers();
+  }
+  // tira o amigo da sala de vez: fecha vídeo e conversa (cada conexão aberta é um vídeo a mais para o PC preparar)
+  function kickViewer(id){
+    const v = viewers.get(id);
+    dropViewer(id);
+    try { v && v.conn && v.conn.close(); } catch(e){}
+    social.hostLeft(id);
+  }
+  // a cada 4 s: avisa que está vivo e tira quem parou de responder
+  let pulseTimer = null;
+  function startPulse(){
+    clearInterval(pulseTimer);
+    pulseTimer = setInterval(() => {
+      if (!stream) { clearInterval(pulseTimer); pulseTimer = null; return; }
+      const now = Date.now();
+      viewers.forEach((v, id) => {
+        try { if (v.conn && v.conn.open) v.conn.send({ type: "ping" }); } catch(e){}
+        if (v.pulses && now - v.seen > 20000) kickViewer(id); // versões antigas não mandam sinal: essas não entram aqui
+      });
+    }, 4000);
   }
 
   function callViewer(id){
@@ -1701,14 +1724,18 @@ details p{margin:8px 0 0}
     dropViewer(id);
     const codec = $("codec").value;
     const call = hostPeer.call(id, stream, { sdpTransform: sdpFor(codec), metadata: { codec } });
-    const entry = { call, conn: null };
+    const entry = { call, conn: null, seen: Date.now(), pulses: false, iceTimer: null };
     viewers.set(id, entry);
     setTimeout(() => applyEncoding(call), 1500); setTimeout(() => applyEncoding(call), 4000);
     const pc = call.peerConnection;
     if (pc) pc.addEventListener("iceconnectionstatechange", () => {
       const st = pc.iceConnectionState;
+      clearTimeout(entry.iceTimer);
+      if (viewers.get(id) !== entry) return;
       if (st === "connected" || st === "completed") applyEncoding(call);
-      if (st === "failed" || st === "closed") dropViewer(id); // o amigo reconecta sozinho
+      // caiu de vez: fecha tudo para o amigo reconectar limpo e não sobrar ninguém repetido na sala
+      if (st === "failed" || st === "closed") kickViewer(id);
+      if (st === "disconnected") entry.iceTimer = setTimeout(() => { if (viewers.get(id) === entry && pc.iceConnectionState === "disconnected") kickViewer(id); }, 15000);
     });
     call.on("close", () => { if (viewers.get(id) === entry) dropViewer(id); });
     call.on("error", () => { if (viewers.get(id) === entry) dropViewer(id); });
@@ -1725,13 +1752,19 @@ details p{margin:8px 0 0}
     const id = roomId();
     hostPeer = new Peer(id, { config: ICE, debug: 0 });
     hostPeer.on("open", pid => {
-      hostRetry = 0; showRoom(pid);
+      hostRetry = 0; showRoom(pid); startPulse();
       if (!$("hostStatus").dataset.warn) setStatus("host", inApp ? "Transmitindo. Mande o código da sala para os amigos." : isHosted ? "Transmitindo. Mande o link para os amigos." : "Transmitindo. Mande o código e este arquivo para os amigos.", "ok");
       renderViewers();
     });
     hostPeer.on("connection", conn => {
       conn.on("open", () => { const e = callViewer(conn.peer); if (e) e.conn = conn; social.hostSync(); });
-      conn.on("data", d => social.hostData(conn.peer, d));
+      conn.on("data", d => {
+        const v = viewers.get(conn.peer);
+        if (v) v.seen = Date.now();
+        if (d && d.type === "ping") { if (v) v.pulses = true; return; }
+        if (d && d.type === "bye") { kickViewer(conn.peer); return; }
+        social.hostData(conn.peer, d, kickViewer);
+      });
       conn.on("close", () => { dropViewer(conn.peer); social.hostLeft(conn.peer); });
     });
     hostPeer.on("disconnected", () => {
@@ -1896,9 +1929,12 @@ details p{margin:8px 0 0}
   // ================= ASSISTIR =================
   let viewPeer = null, viewCall = null, viewConn = null, wanted = null, ended = false;
   let everConnected = false, attempts = 0, retryTimer = null, iceTimer = null, foundTimer = null;
+  // mesmo "crachá" em todas as reconexões: o transmissor reconhece que é a mesma pessoa voltando
+  let viewCid = "", pulseView = null, hostSeen = 0, hostPulses = false;
 
   function cleanupView(){
-    clearTimeout(retryTimer); clearTimeout(iceTimer); clearTimeout(foundTimer);
+    clearTimeout(retryTimer); clearTimeout(iceTimer); clearTimeout(foundTimer); clearInterval(pulseView); pulseView = null;
+    try { viewConn && viewConn.open && viewConn.send({ type: "bye" }); } catch(e){}
     try { viewCall && viewCall.close(); } catch(e){}
     try { viewPeer && viewPeer.destroy(); } catch(e){}
     viewPeer = viewCall = viewConn = null;
@@ -1933,9 +1969,19 @@ details p{margin:8px 0 0}
       foundTimer = setTimeout(() => { if (peer === viewPeer && !viewCall) scheduleRetry("A sala não respondeu."); }, 12000);
       conn.on("open", () => {
         setStatus("view", "Conectado. Recebendo o vídeo…", "");
-        try { conn.send({ type: "hello", name: social.myName(), costume: social.myCostume() }); } catch(e){}
+        try { conn.send({ type: "hello", name: social.myName(), costume: social.myCostume(), cid: viewCid }); } catch(e){}
+        hostSeen = Date.now(); hostPulses = false;
+        clearInterval(pulseView);
+        pulseView = setInterval(() => {
+          if (peer !== viewPeer) return;
+          try { conn.open && conn.send({ type: "ping" }); } catch(e){}
+          // o transmissor sumiu sem avisar: reconecta (só se ele for de uma versão que manda sinal)
+          if (hostPulses && Date.now() - hostSeen > 20000 && !ended) scheduleRetry("A conexão caiu.");
+        }, 4000);
       });
       conn.on("data", d => {
+        hostSeen = Date.now();
+        if (d && d.type === "ping") { hostPulses = true; return; }
         if (d && d.type === "end") {
           ended = true; cleanupView(); stopStats(); stopMeter(); setLive(false);
           video.srcObject = null; $("empty").hidden = false;
@@ -1960,7 +2006,7 @@ details p{margin:8px 0 0}
         clearTimeout(iceTimer);
         if (st === "disconnected") {
           setStatus("view", "Conexão instável, aguardando…", "warn");
-          iceTimer = setTimeout(() => { if (pc.iceConnectionState === "disconnected" && call === viewCall) scheduleRetry("A conexão caiu."); }, 6000);
+          iceTimer = setTimeout(() => { if (pc.iceConnectionState === "disconnected" && call === viewCall) scheduleRetry("A conexão caiu."); }, 10000);
         } else if (st === "failed") {
           scheduleRetry("A conexão falhou.");
         } else if (st === "connected" || st === "completed") {
@@ -2004,6 +2050,7 @@ details p{margin:8px 0 0}
     $("joinCode").value = code;
     unlockAudio(); sfx.ensure(); video.muted = false; // o clique em "Entrar" libera o som no navegador
     wanted = code; ended = false; everConnected = false; attempts = 0;
+    viewCid = Math.random().toString(36).slice(2, 12) + Date.now().toString(36);
     $("joinBtn").disabled = true;
     setTab(false); social.reset();
     $("viewTitle").textContent = "Sala " + code;
@@ -2199,6 +2246,8 @@ details p{margin:8px 0 0}
     const EMOJIS = ["😂", "😮", "😍", "👏", "🔥", "🍿", "😠", "🖕"];
     const names = new Map();   // transmissor: id do amigo -> nome
     const costumes = new Map(); // transmissor: id do amigo -> fantasia do Penumbra
+    const cids = new Map();     // transmissor: id da conexão -> "crachá" fixo da pessoa
+    const leaving = new Map();  // transmissor: crachá -> aviso de "saiu" esperando para ver se a pessoa volta
     let people = [];           // [{ id, name, host }]
     let lastReact = 0;
 
@@ -2405,14 +2454,20 @@ details p{margin:8px 0 0}
       broadcast({ type: "people", list: people });
       renderPeople();
     }
-    function hostData(id, d){
+    function hostData(id, d, kick){
       if (!d || typeof d !== "object") return;
       if (d.type === "hello") {
         const first = !names.has(id);
+        const cid = (typeof d.cid === "string" && d.cid) ? d.cid.slice(0, 40) : id;
+        // a mesma pessoa voltou com uma conexão nova: tira a antiga (nada de gente repetida)
+        let returning = false;
+        [...cids].forEach(([other, c]) => { if (c === cid && other !== id) { returning = true; cids.delete(other); names.delete(other); costumes.delete(other); kick && kick(other); } });
+        if (leaving.has(cid)) { clearTimeout(leaving.get(cid)); leaving.delete(cid); returning = true; }
+        cids.set(id, cid);
         names.set(id, clean(d.name, 24) || "Convidado");
         costumes.set(id, validCostume(d.costume));
         hostSync();
-        if (first) { const m = { type: "chat", sys: true, text: names.get(id) + " entrou na sala" }; broadcast(m); addChat(m); }
+        if (first && !returning) { const m = { type: "chat", sys: true, text: names.get(id) + " entrou na sala" }; broadcast(m); addChat(m); }
       } else if (d.type === "chat") {
         const text = clean(d.text, 300); if (!text) return;
         const m = { type: "chat", from: names.get(id) || "Convidado", text };
@@ -2432,8 +2487,16 @@ details p{margin:8px 0 0}
     }
     function hostLeft(id){
       if (viewers.has(id)) return; // voltou na hora (reconexão)
-      const name = names.get(id); names.delete(id); costumes.delete(id);
-      if (name) { const m = { type: "chat", sys: true, text: name + " saiu" }; broadcast(m); addChat(m); }
+      const name = names.get(id), cid = cids.get(id) || id;
+      names.delete(id); costumes.delete(id); cids.delete(id);
+      // espera um pouco antes de avisar: se for só a internet piscando, a pessoa volta e ninguém vê "saiu/entrou"
+      if (name && !leaving.has(cid) && ![...cids.values()].includes(cid)) {
+        leaving.set(cid, setTimeout(() => {
+          leaving.delete(cid);
+          if (role !== "host") return;
+          const m = { type: "chat", sys: true, text: name + " saiu" }; broadcast(m); addChat(m);
+        }, 20000));
+      }
       hostSync();
     }
 
@@ -2471,7 +2534,7 @@ details p{margin:8px 0 0}
     });
 
     function reset(){
-      names.clear(); costumes.clear(); people = [];
+      names.clear(); costumes.clear(); cids.clear(); leaving.forEach(t => clearTimeout(t)); leaving.clear(); people = [];
       $("chatList").innerHTML = '<div class="empty-chat" id="chatEmpty">Diga oi. As mensagens aparecem aqui e em cima do vídeo quando a lateral estiver fechada.</div>';
       $("chatFloat").innerHTML = ""; $("floaters").innerHTML = "";
       renderPeople();
@@ -2600,14 +2663,18 @@ details p{margin:8px 0 0}
         const vt = stream && stream.getVideoTracks()[0];
         const s = vt?.getSettings?.() || {};
         $("sFps").textContent = s.frameRate ? Math.round(s.frameRate) : "—";
-        let bytes = 0, codec = null; const now = performance.now();
+        let bytes = 0, codec = null, limit = ""; const now = performance.now();
         for (const v of viewers.values()) {
           const st = await v.call.peerConnection?.getStats?.(); if (!st) continue;
-          st.forEach(r => { if (r.type === "outbound-rtp" && r.kind === "video") { bytes += r.bytesSent; codec = codec || codecName(st, r); } });
+          st.forEach(r => { if (r.type === "outbound-rtp" && r.kind === "video") {
+            bytes += r.bytesSent; codec = codec || codecName(st, r);
+            if (r.qualityLimitationReason === "cpu") limit = " · PC no limite";
+            else if (r.qualityLimitationReason === "bandwidth" && !limit) limit = " · internet no limite";
+          } });
         }
         $("sKbps").textContent = last && viewers.size ? Math.round((bytes - last.bytes) * 8 / (now - last.t)) + " kbps" : (viewers.size ? "…" : "—");
         $("sLoss").textContent = viewers.size || "—";
-        $("sCodec").textContent = codec || "—";
+        $("sCodec").textContent = codec ? codec + limit : "—";
         last = { bytes, t: now };
         return;
       }
