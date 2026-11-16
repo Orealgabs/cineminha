@@ -1163,6 +1163,126 @@ details p{margin:8px 0 0}
   </div>
 </div>
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
+<script>
+/* Ponto de encontro da sala.
+   O servidor gratuito do PeerJS parou de repassar mensagens, então o PeerJS agora conversa com um
+   "servidor" de mentirinha aqui dentro da página, que usa 3 servidores públicos de mensagens (MQTT) ao mesmo tempo.
+   Tudo o que passa por eles vai criptografado com o código da sala; o vídeo continua indo direto entre os PCs. */
+(function(){
+  const HOST = "sinal.sessaodeserie";
+  const BROKERS = window.SINAL_BROKERS || ["wss://broker.emqx.io:8084/mqtt", "wss://broker.hivemq.com:8884/mqtt", "wss://test.mosquitto.org:8081/mqtt"];
+  const RealWS = window.WebSocket;
+  const te = new TextEncoder(), td = new TextDecoder();
+  const hex = b => [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, "0")).join("");
+  const sha = s => crypto.subtle.digest("SHA-256", te.encode(s));
+  const topics = new Map(), keys = new Map();
+  const topicOf = id => { if (!topics.has(id)) topics.set(id, sha("sessao-topico:" + id).then(h => "sessaodeserie/v1/" + hex(h).slice(0, 40))); return topics.get(id); };
+  const keyOf = id => { if (!keys.has(id)) keys.set(id, sha("sessao-chave:" + id).then(h => crypto.subtle.importKey("raw", h, "AES-GCM", false, ["encrypt", "decrypt"]))); return keys.get(id); };
+  async function seal(id, obj){
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, await keyOf(id), te.encode(JSON.stringify(obj))));
+    const out = new Uint8Array(12 + ct.length); out.set(iv); out.set(ct, 12); return out;
+  }
+  async function unseal(id, buf){
+    const u = new Uint8Array(buf);
+    return JSON.parse(td.decode(await crypto.subtle.decrypt({ name: "AES-GCM", iv: u.slice(0, 12) }, await keyOf(id), u.slice(12))));
+  }
+
+  // conexões com os servidores de mensagens: uma de cada, compartilhadas pela página toda
+  let clients = null;
+  const routes = new Map(); // tópico -> soquete
+  function ensure(){
+    if (clients || !window.mqtt) return clients || [];
+    clients = BROKERS.map(url => {
+      const c = window.mqtt.connect(url, { clientId: "sessao_" + Math.random().toString(36).slice(2, 12), clean: true, keepalive: 30, reconnectPeriod: 4000, connectTimeout: 9000, protocolVersion: 4 });
+      c.on("connect", () => { routes.forEach((s, t) => c.subscribe(t, { qos: 0 })); routes.forEach(s => s._up()); });
+      c.on("message", (t, m) => { const s = routes.get(t); if (s) s._in(m); });
+      c.on("error", () => {});
+      return c;
+    });
+    return clients;
+  }
+  const online = () => (clients || []).some(c => c.connected);
+
+  class SinalSocket {
+    constructor(url){
+      this.readyState = 0; this.onopen = this.onmessage = this.onclose = this.onerror = null;
+      this.id = new URL(url).searchParams.get("id");
+      this._seen = new Set(); this._out = Promise.resolve(); this._inq = Promise.resolve();
+      this._heard = new Map(); this._wait = new Map(); this._down = null;
+      ensure();
+      topicOf(this.id).then(t => {
+        if (this.readyState > 1) return;
+        this._topic = t; routes.set(t, this);
+        clients.forEach(c => c.connected && c.subscribe(t, { qos: 0 }));
+        if (online()) this._up();
+        // nenhum servidor respondeu: avisa o PeerJS que caiu (o app tenta de novo)
+        this._fail = setTimeout(() => { if (this.readyState === 0) this.close(); }, 12000);
+      });
+      // se todos os servidores caírem por um tempo, conta como queda do servidor da sala
+      this._watch = setInterval(() => {
+        if (this.readyState !== 1) return;
+        if (online()) { this._down = null; return; }
+        if (!this._down) this._down = Date.now();
+        else if (Date.now() - this._down > 15000) this.close();
+      }, 3000);
+    }
+    _up(){
+      if (this.readyState !== 0 || !this._topic) return;
+      clearTimeout(this._fail); this.readyState = 1;
+      this.onopen && this.onopen();
+      this._deliver({ type: "OPEN" });
+    }
+    _deliver(msg){ if (this.readyState === 1 && this.onmessage) this.onmessage({ data: JSON.stringify(msg) }); }
+    _in(buf){
+      this._inq = this._inq.then(async () => {
+        let m; try { m = await unseal(this.id, buf); } catch(e) { return; }
+        if (!m || !m.m || this._seen.has(m.m)) return;
+        this._seen.add(m.m); if (this._seen.size > 2000) this._seen = new Set([...this._seen].slice(-1000));
+        if (m.src) { this._heard.set(m.src, Date.now()); clearTimeout(this._wait.get(m.src)); this._wait.delete(m.src); }
+        if (m.type === "KNOCK") { this._send(m.src, { type: "HERE" }); return; }
+        if (m.type === "HERE") return;
+        this._deliver({ type: m.type, src: m.src, payload: m.payload });
+      });
+    }
+    _send(dst, body){
+      const msg = Object.assign({ src: this.id, m: Math.random().toString(36).slice(2) + Date.now().toString(36) }, body);
+      this._out = this._out.then(async () => {
+        const [t, data] = await Promise.all([topicOf(dst), seal(dst, msg)]);
+        (clients || []).forEach(c => { if (c.connected) c.publish(t, data, { qos: 0 }); });
+      }).catch(() => {});
+    }
+    send(text){
+      if (this.readyState !== 1) return;
+      let d; try { d = JSON.parse(text); } catch(e) { return; }
+      if (!d || !d.dst || d.type === "HEARTBEAT") return;
+      // primeira tentativa de falar com alguém: se ninguém responder, é porque a sala não existe
+      if (d.type === "OFFER" && !this._wait.has(d.dst) && !(Date.now() - (this._heard.get(d.dst) || 0) < 30000)) {
+        this._send(d.dst, { type: "KNOCK" });
+        this._wait.set(d.dst, setTimeout(() => { this._wait.delete(d.dst); this._deliver({ type: "EXPIRE", src: d.dst }); }, 8000));
+      }
+      this._send(d.dst, { type: d.type, payload: d.payload });
+    }
+    close(){
+      if (this.readyState > 1) return;
+      const was = this.readyState; this.readyState = 3;
+      clearTimeout(this._fail); clearInterval(this._watch); this._wait.forEach(t => clearTimeout(t));
+      if (this._topic && routes.get(this._topic) === this) { routes.delete(this._topic); (clients || []).forEach(c => c.connected && c.unsubscribe(this._topic)); }
+      const cb = this.onclose; if (cb) setTimeout(() => cb({ code: 1000 }), 0);
+    }
+  }
+  // o PeerJS abre o "WebSocket" do servidor dele; só esse endereço vem para cá, o resto segue normal
+  function WS(url, protocols){
+    if (typeof url === "string" && url.indexOf("//" + HOST) !== -1) return new SinalSocket(url);
+    return protocols === undefined ? new RealWS(url) : new RealWS(url, protocols);
+  }
+  WS.prototype = RealWS.prototype;
+  ["CONNECTING", "OPEN", "CLOSING", "CLOSED"].forEach((k, i) => { try { Object.defineProperty(WS, k, { value: i }); } catch(e){} });
+  window.WebSocket = WS;
+  window.SINAL = { host: HOST, ready: () => !!window.mqtt, online, warm: ensure };
+})();
+</script>
 <script>
 (() => {
   const $ = id => document.getElementById(id);
@@ -1171,6 +1291,9 @@ details p{margin:8px 0 0}
     { urls: "stun:stun1.l.google.com:19302" },
     { urls: "stun:stun.cloudflare.com:3478" }
   ]};
+  // ponto de encontro da sala (ver o bloco "SinalSocket" no começo): PeerJS conversa com ele como se fosse o servidor dele
+  const peerOpts = () => ({ host: window.SINAL.host, port: 443, path: "/", secure: true, key: "peerjs", config: ICE, debug: 0 });
+  try { window.SINAL.warm(); } catch(e){}
   const isHosted = /^https?:$/.test(location.protocol);
   // Rodando dentro do app "Sessão de Série" para Windows?
   const inApp = !!(window.sessaoApp && window.sessaoApp.isApp);
@@ -1750,7 +1873,7 @@ details p{margin:8px 0 0}
 
   function openHostPeer(){
     const id = roomId();
-    hostPeer = new Peer(id, { config: ICE, debug: 0 });
+    hostPeer = new Peer(id, peerOpts());
     hostPeer.on("open", pid => {
       hostRetry = 0; showRoom(pid); startPulse();
       if (!$("hostStatus").dataset.warn) setStatus("host", inApp ? "Transmitindo. Mande o código da sala para os amigos." : isHosted ? "Transmitindo. Mande o link para os amigos." : "Transmitindo. Mande o código e este arquivo para os amigos.", "ok");
@@ -1970,7 +2093,8 @@ details p{margin:8px 0 0}
     cleanupView();
     if (ended || !wanted) return;
     if (!attempts) setStatus("view", "Procurando a sala…", "");
-    const peer = viewPeer = new Peer(undefined, { config: ICE, debug: 0 });
+    // o código de quem assiste é criado aqui (o ponto de encontro novo não distribui códigos)
+    const peer = viewPeer = new Peer("v-" + (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now().toString(36)), peerOpts());
 
     let linked = false;
     peer.on("open", () => {
