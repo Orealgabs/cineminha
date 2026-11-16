@@ -1,33 +1,26 @@
-// Testa o servidor gratuito do PeerJS (0.peerjs.com) do mesmo jeito que o app usa, várias vezes.
-import WebSocket from "ws";
-const base = "0.peerjs.com";
-function open(id){
-  return new Promise(res => {
-    const ws = new WebSocket(`wss://${base}/peerjs?key=peerjs&id=${id}&token=${Math.random().toString(36).slice(2)}&version=1.5.4`);
-    const out = { id, msgs: [], ws };
-    const to = setTimeout(() => { out.timeout = true; res(out); }, 15000);
-    ws.on("message", m => { const d = JSON.parse(m); out.msgs.push(d.type); if (["OPEN","ERROR","ID-TAKEN"].includes(d.type)) { clearTimeout(to); res(out); } });
-    ws.on("error", e => { out.err = e.message; clearTimeout(to); res(out); });
-  });
+// Testa servidores públicos de mensagens (MQTT por WebSocket) como ponto de encontro.
+import mqtt from "mqtt";
+const brokers = [
+  "wss://broker.emqx.io:8084/mqtt",
+  "wss://broker.hivemq.com:8884/mqtt",
+  "wss://test.mosquitto.org:8081/mqtt",
+  "wss://mqtt.eclipseprojects.io:443/mqtt",
+  "wss://public.mqtthq.com:8084/mqtt",
+];
+async function test(url){
+  const t0 = Date.now(); const topic = "sessaodeserie/diag/" + Math.random().toString(36).slice(2);
+  const opts = { connectTimeout: 8000, reconnectPeriod: 0, clean: true };
+  const a = mqtt.connect(url, opts), b = mqtt.connect(url, opts);
+  const up = c => new Promise(r => { c.once("connect", () => r(true)); c.once("error", () => r(false)); setTimeout(() => r(false), 9000); });
+  const [ua, ub] = await Promise.all([up(a), up(b)]);
+  if (!ua || !ub) { a.end(true); b.end(true); return `${url}: NÃO conectou`; }
+  await new Promise(r => a.subscribe(topic, r));
+  const big = "x".repeat(12000);
+  const got = new Promise(r => { a.on("message", (t, m) => r(m.length)); setTimeout(() => r(0), 6000); });
+  const t1 = Date.now(); b.publish(topic, big);
+  const len = await got; const ms = Date.now() - t1;
+  a.end(true); b.end(true);
+  return `${url}: conectou em ${t1 - t0}ms, ${len ? "repassou 12KB em " + ms + "ms" : "NÃO repassou"}`;
 }
-let ok = 0, n = 0;
-for (let i = 0; i < 4; i++) {
-  const room = "sessao-diag-" + Math.random().toString(36).slice(2, 8);
-  const a = await open(room);
-  for (let j = 0; j < 3; j++) {
-    const b = await open("viewer-" + Math.random().toString(36).slice(2, 10));
-    const got = new Promise(res => {
-      const h = m => { const d = JSON.parse(m); if (d.type === "OFFER") { a.ws.off("message", h); res("OK"); } };
-      a.ws.on("message", h);
-      b.ws.on("message", m => { const d = JSON.parse(m); if (d.type === "EXPIRE") res("EXPIRE (servidor disse que a sala não existe)"); });
-      setTimeout(() => res("nada chegou"), 8000);
-    });
-    b.ws.send(JSON.stringify({ type: "OFFER", dst: room, payload: { type: "data", connectionId: "dc_" + j, sdp: { type: "offer", sdp: "v=0" } } }));
-    const r = await got; n++; if (r === "OK") ok++;
-    console.log(`sala ${i+1} amigo ${j+1}: ${a.msgs.join(",")} / ${b.msgs.join(",")} -> ${r}`);
-    b.ws.close();
-  }
-  a.ws.close();
-}
-console.log(`RESUMO: ${ok} de ${n} pedidos chegaram na sala`);
+for (let k = 0; k < 2; k++) for (const u of brokers) console.log("RES", await test(u));
 process.exit(0);
