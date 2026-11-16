@@ -396,6 +396,7 @@ details p{margin:8px 0 0}
 .screen.menuopen.idle .reactbar{opacity:1;pointer-events:auto}
 .screen.menuopen.idle{cursor:auto}
 /* aviso de versão nova */
+.ver{position:fixed;left:max(10px,env(safe-area-inset-left,0px));bottom:max(8px,env(safe-area-inset-bottom,0px));z-index:40;font:500 11px/1 ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--faint);opacity:.75;pointer-events:none;letter-spacing:.02em}
 .toast{position:fixed;right:max(20px,env(safe-area-inset-right,0px));bottom:max(20px,env(safe-area-inset-bottom,0px));z-index:50;display:flex;align-items:center;gap:14px;max-width:min(420px,calc(100vw - 40px));
   background:var(--surface-2);border:1px solid var(--line-2);border-radius:18px;padding:12px 12px 12px 16px;box-shadow:0 24px 60px -20px rgba(0,0,0,.8)}
 .toast .t{font-size:13.5px;color:var(--muted);min-width:0}
@@ -1054,6 +1055,7 @@ details p{margin:8px 0 0}
           <select class="field" id="quality">
             <option value="720-30">720p · 30 quadros</option>
             <option value="1080-30" selected>1080p · 30 quadros</option>
+            <option value="720-60">720p · 60 quadros (jogo mais leve)</option>
             <option value="1080-60">1080p · 60 quadros</option>
           </select>
         </div>
@@ -1156,6 +1158,7 @@ details p{margin:8px 0 0}
     </aside>
   </section>
 
+  <div class="ver" id="appVer" hidden aria-hidden="true"></div>
   <div class="toast" id="updToast" hidden role="status">
     <div class="t"><b id="updTitle">Versão nova</b><span id="updText"></span><div class="bar2" id="updBar"><i id="updFill"></i></div></div>
     <button class="btn small" id="updBtn" hidden>Reiniciar agora</button>
@@ -1706,8 +1709,9 @@ details p{margin:8px 0 0}
         p.encodings[0].maxBitrate = Number($("bitrate").value) * 1000;
         p.encodings[0].maxFramerate = fps;
         p.encodings[0].scaleResolutionDownBy = Math.round(scale * 100) / 100;
-        // sob aperto, baixa um pouco a nitidez em vez de congelar a imagem
-        p.degradationPreference = "balanced";
+        // 60 quadros: sob aperto, mantém a fluidez e baixa só a nitidez (é o que trava menos em jogo).
+        // 30 quadros: equilibra os dois.
+        p.degradationPreference = fps >= 60 ? "maintain-framerate" : "balanced";
       } else {
         p.encodings[0].maxBitrate = 256000;
       }
@@ -2151,6 +2155,7 @@ details p{margin:8px 0 0}
         }
       });
       call.on("stream", s => {
+        try { call.peerConnection.getReceivers().forEach(r => { if ("jitterBufferTarget" in r) r.jitterBufferTarget = 150; }); } catch(e){}
         if (video.srcObject === s) return;
         video.srcObject = s; $("empty").hidden = true;
         video.muted = false; video.volume = Number($("vol").value);
@@ -2691,9 +2696,9 @@ details p{margin:8px 0 0}
 
   // ================= QUALIDADE SIMPLIFICADA =================
   const PRESETS = {
-    serie: { q: "1080-30", b: 5000, c: ["VP9", "auto"] },
+    serie: { q: "1080-30", b: 5000, c: ["H264", "VP9", "auto"] },
     jogo:  { q: "1080-60", b: 8000, c: ["H264", "auto"] },
-    leve:  { q: "720-30",  b: 2500, c: ["VP9", "auto"] }
+    leve:  { q: "720-30",  b: 2500, c: ["H264", "VP9", "auto"] }
   };
   function markPreset(name){
     document.querySelectorAll(".preset").forEach(b => b.setAttribute("aria-pressed", b.dataset.preset === name));
@@ -2782,6 +2787,7 @@ details p{margin:8px 0 0}
     $("updClose").onclick = () => { dismissed = true; $("updToast").hidden = true; };
     window.sessaoApp.onUpdate(paint);
     paint(window.sessaoApp.updateState());
+    if (window.sessaoApp.version) { $("appVer").textContent = "v" + window.sessaoApp.version; $("appVer").hidden = false; }
   }
 
   // ---------- link direto: ?sala=... ----------
@@ -2797,7 +2803,12 @@ details p{margin:8px 0 0}
 
   // ---------- estatísticas ----------
   let last = null;
-  const codecName = (st, r) => { const c = r.codecId && st.get(r.codecId); return c ? c.mimeType.split("/")[1].toUpperCase() : null; };
+  const codecName = (st, r) => {
+    const c = r.codecId && st.get(r.codecId); if (!c) return null;
+    const name = c.mimeType.split("/")[1].toUpperCase();
+    const hw = r.powerEfficientEncoder ?? r.powerEfficientDecoder;
+    return name + (hw === true ? " · placa de vídeo" : hw === false ? " · processador" : "");
+  };
   function startStats(getPc, isHost){
     stopStats(); last = null;
     $("sLossH").textContent = isHost ? "Conectados" : "Perda";
