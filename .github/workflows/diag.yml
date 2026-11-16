@@ -1,0 +1,13 @@
+name: Diagnóstico da sala
+on: workflow_dispatch
+permissions:
+  contents: read
+jobs:
+  testar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: npm i --no-save ws@8.18.0
+      - run: node .github/diag/sala.mjs
