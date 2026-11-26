@@ -2150,7 +2150,7 @@ details p{margin:8px 0 0}
         } else if (st === "failed") {
           scheduleRetry("A conexão falhou.");
         } else if (st === "connected" || st === "completed") {
-          attempts = 0; everConnected = true;
+          attempts = 0; everConnected = true; try { store.set("ultimaSala", wanted); } catch(e){}
           setStatus("view", "Assistindo ao vivo.", "ok");
         }
       });
@@ -2164,7 +2164,7 @@ details p{margin:8px 0 0}
         s.onaddtrack = () => startMeter(s, false);
         video.play().then(() => { $("unmuteBtn").hidden = true; })
           .catch(() => { video.muted = true; video.play().catch(()=>{}); $("unmuteBtn").hidden = false; });
-        attempts = 0; everConnected = true;
+        attempts = 0; everConnected = true; try { store.set("ultimaSala", wanted); } catch(e){}
         setStatus("view", "Assistindo ao vivo.", "ok");
         startStats(() => call.peerConnection, false);
       });
@@ -2789,6 +2789,15 @@ details p{margin:8px 0 0}
     paint(window.sessaoApp.updateState());
     if (window.sessaoApp.version) { $("appVer").textContent = "v" + window.sessaoApp.version; $("appVer").hidden = false; }
   }
+
+  // ---------- última sala em que você entrou ----------
+  (() => {
+    const ult = store.get("ultimaSala", "");
+    if (/^[a-z0-9-]{4,40}$/.test(ult) && !$("joinCode").value) {
+      $("joinCode").value = ult;
+      setStatus("view", "Sua última sala: " + ult + ". Clique em Entrar para voltar.", "");
+    }
+  })();
 
   // ---------- link direto: ?sala=... ----------
   (() => {
